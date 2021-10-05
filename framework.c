@@ -59,7 +59,7 @@ int WindowInitialize(int width, int height)
         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
         NULL, NULL, hInstance, NULL);
     
-    if (window.handle == INVALID_HANDLE_VALUE)
+    if (window.handle == NULL)
     {
         fprintf(stderr, "ERROR - Failed to create window: error code is %lu\n", GetLastError());
         return -2;
