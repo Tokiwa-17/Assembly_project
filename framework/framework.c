@@ -4,12 +4,14 @@
 #include <memory.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdint.h>
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 
 static struct
 {
+    HINSTANCE process;
     HWND handle;
     int width;
     int height;
@@ -18,18 +20,16 @@ static struct
 static struct
 {
     LARGE_INTEGER frequency;
-    LARGE_INTEGER initialCount;
-    LARGE_INTEGER frameDeltaCount;
-    LARGE_INTEGER frameLastCount;
+    uint32_t fps;
+    uint32_t frameDelta;
+    LARGE_INTEGER frameLast;
 } timer;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-int WindowInitialize(int width, int height)
+void WindowInitialize()
 {
-    memset(&window, 0, sizeof(window));
-
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    window.process = GetModuleHandle(NULL);
     HICON hIcon = LoadIcon(NULL, IDI_APPLICATION);
     const TCHAR *className = TEXT("MUGWindow");
     const TCHAR *wndName = TEXT("MUG");
@@ -40,7 +40,7 @@ int WindowInitialize(int width, int height)
     wc.lpfnWndProc = WindowProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
-    wc.hInstance = hInstance;
+    wc.hInstance = window.process;
     wc.hIcon = hIcon;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = NULL;
@@ -48,88 +48,72 @@ int WindowInitialize(int width, int height)
     wc.lpszClassName = className;
     wc.hIconSm = hIcon;
 
-    if (RegisterClassEx(&wc) == INVALID_ATOM)
-    {
-        fprintf(stderr, "ERROR - Failed to register window class: error code is %lu\n", GetLastError());
-        return -1;
-    }
+    RegisterClassEx(&wc);
 
     window.handle = CreateWindowEx(
         0, className, wndName, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-        NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, window.width, window.height,
+        NULL, NULL, window.process, NULL);
     
     if (window.handle == NULL)
-    {
-        fprintf(stderr, "ERROR - Failed to create window: error code is %lu\n", GetLastError());
-        return -2;
-    }
-    window.width = width;
-    window.height = height;
+        ExitProcess(GetLastError());
 
     ShowWindow(window.handle, SW_SHOW);
     UpdateWindow(window.handle);
-    return 0;
 }
 
-void TimerInitialize(float fps)
+void WindowFinalize()
+{
+    DestroyWindow(window.handle);
+}
+
+void TimerInitialize()
 {
     QueryPerformanceFrequency(&timer.frequency);
-    timer.frameDeltaCount.QuadPart = (LONGLONG)((float)timer.frequency.QuadPart / fps);
-    QueryPerformanceCounter(&timer.initialCount);
-    timer.frameLastCount = timer.initialCount;
+    timer.frameDelta = (uint32_t)(timer.frequency.QuadPart / (LONGLONG)timer.fps);
+    QueryPerformanceCounter(&timer.frameLast);
 }
 
 BOOL TimerNextFrame()
 {
     LARGE_INTEGER currentCount;
     QueryPerformanceCounter(&currentCount);
-    if (currentCount.QuadPart - timer.frameLastCount.QuadPart >= timer.frameDeltaCount.QuadPart)
+    if (currentCount.QuadPart - timer.frameLast.QuadPart >= (LONGLONG)timer.frameDelta)
     {
-        timer.frameLastCount.QuadPart += timer.frameDeltaCount.QuadPart;
+        timer.frameLast.QuadPart += (LONGLONG)timer.frameDelta;
         return TRUE;
     }
     return FALSE;
 }
 
-// time since main loop begin; in seconds
-float TimerElapsedTime()
-{
-    LARGE_INTEGER currentCount;
-    QueryPerformanceCounter(&currentCount);
-    return (float)(currentCount.QuadPart - timer.initialCount.QuadPart) / (float)timer.frequency.QuadPart;
-}
-
-int GameInitialize();
+void GameInitialize();
 
 void GameFinalize();
 
-int GameRender();
+void GameRender(HDC hDC);
 
-int GameUpdate();
+void GameUpdate();
 
 int main()
 {
-    int retcode = WindowInitialize(960, 540);
-    if (retcode != 0)
-        return retcode;
+    memset(&window, 0, sizeof(window));
+    memset(&timer, 0, sizeof(timer));
+    window.width = 960;
+    window.height = 540;
+    timer.fps = 60;
 
-    retcode = GameInitialize();
-    if (retcode != 0)
-    {
-        DestroyWindow(window.handle);
-        return retcode;
-    }
-
-    TimerInitialize(60.0f);
+    int retcode = 0;
+    WindowInitialize();
+    GameInitialize();
+    TimerInitialize();
     while (TRUE)
     {
         // rendering with fixed frame rate
         if (TimerNextFrame())
         {
-            retcode = GameRender();
-            if (retcode != 0)
-                goto finalize; // asm 'jmp'
+            HDC hDC = GetDC(window.handle);
+            GameRender(hDC);
+            ReleaseDC(window.handle, hDC);
         }
 
         MSG msg;
@@ -138,17 +122,14 @@ int main()
             if (msg.message == WM_QUIT)
             {
                 retcode = (int)msg.wParam;
-                goto finalize; // asm 'jmp'
+                goto main_exit; // asm 'jmp'
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        retcode = GameUpdate();
-        if (retcode != 0)
-            goto finalize; // asm 'jmp'
+        GameUpdate();
     }
-
-finalize:
+main_exit:
     GameFinalize();
     DestroyWindow(window.handle);
     return retcode;
@@ -188,11 +169,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int GameInitialize()
+void GameInitialize()
 {
     memset(&game, 0, sizeof(game));
     // TODO
-    return 0;
 }
 
 void GameFinalize()
@@ -200,29 +180,12 @@ void GameFinalize()
     // TODO
 }
 
-int GameRender()
+void GameRender(HDC hDC)
 {
-    HDC hDC = GetDC(window.handle);
-    RECT rgn;
-    rgn.left = 0;
-    rgn.top = 0;
-    rgn.right = window.width;
-    rgn.bottom = window.height;
-
-    // render example
-    unsigned gray = (unsigned)(127.5f * (1.0f + sin(TimerElapsedTime() * 2.5f)));
-    HBRUSH hClearColor = CreateSolidBrush(RGB(gray, gray, gray));
-    FillRect(hDC, &rgn, hClearColor);
-    DeleteObject(hClearColor);
-
-    // TODO: coordinate transform
-    // TODO: draw
-    ReleaseDC(window.handle, hDC);
-    return 0;
+    // TODO
 }
 
-int GameUpdate()
+void GameUpdate()
 {
     // TODO: update game state
-    return 0;
 }
