@@ -6,7 +6,7 @@ else()
     message(FATAL_ERROR "Please add configure arg -DMASM_HOME=<your masm directory>")
 endif()
 
-project(mug LANGUAGES C ASM_MASM)
+project(asm_mug LANGUAGES C ASM_MASM)
 if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
 endif()
@@ -16,5 +16,19 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 include_directories(${MASM_HOME}/include)
 link_directories(${MASM_HOME}/lib)
 
-add_executable(framework framework/framework.asm)
-add_executable(framework-c framework/framework.c)
+set(MUG_HEADERS
+    src/window.inc
+    src/timer.inc
+    src/game.inc
+)
+
+set(MUG_SOURCES
+    src/window.asm
+    src/timer.asm
+    src/game.asm
+)
+
+source_group("src" FILES ${MUG_HEADERS} ${MUG_SOURCES})
+
+add_executable(${PROJECT_NAME} ${MUG_SOURCES} src/game.rc)
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ASM_MASM)
