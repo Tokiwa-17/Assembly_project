@@ -12,3 +12,12 @@ cmake -DMASM_HOME=D:/masm32 -Bbuild -T host=x86 -A win32
 
 #### 其它方式
 VSCode
+
+## GDI utility functions
+#### 绘制图片
++ [`BitBlt`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt)
++ [`StretchBlt`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchblt)
++ [`TransparentBlt`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-transparentblt)
+
+#### 半透明
++ [`AlphaBlend`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-alphablend)
