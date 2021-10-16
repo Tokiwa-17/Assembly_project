@@ -11,7 +11,7 @@ cmake -DMASM_HOME=D:/masm32 -Bbuild -T host=x86 -A win32
 然后在build目录下可以看到生成的VS项目(.sln)文件。
 
 #### 其它方式
-VSCode
+VSCode CMake-Tools
 
 ## GDI utility functions
 #### 绘制图片
@@ -21,3 +21,11 @@ VSCode
 
 #### 半透明
 + [`AlphaBlend`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-alphablend)
+
+## 写谱
+参照level-build/cyaegha.cpp
+含`main`函数的单文件，在同级CMakeLists中加上`add_level(level_name)`，指定以level_name.cpp生成可执行文件，这个程序将会生成二进制格式的谱面。
+
+## 游戏设定界面
+#### 下落速度调整
+#### 延迟调整
