@@ -5,79 +5,23 @@ extern "C"
 {
 #endif
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <Windows.h>
+#include "level.h"
 
-#define GAME_KEY_COUNT 4
-
-    typedef DWORD Time;
-
-    /////////////// Data Struct ///////////////
-
-    typedef enum LevelDifficulty
+    typedef struct LevelNoteRecord
     {
-        DIFFICULTY_EASY,
-        DIFFICULTY_NORMAL,
-        DIFFICULTY_HARD,
-        DIFFICULTY_EXPERT,
-    } LevelDifficulty;
+        Time judgeTime;
+        NoteJudge judgement;
+    } LevelNoteRecord;
 
-    typedef enum NoteType
+    typedef struct LevelRecord
     {
-        NOTE_NONE,
-        NOTE_TAP,
-        NOTE_CATCH,
-    } NoteType;
-
-    typedef enum NoteJudge
-    {
-        NOTE_JUDGE_CRITICAL_PERFECT,
-        NOTE_JUDGE_PERFECT_EARLY,
-        NOTE_JUDGE_PERFECT_LATE,
-        NOTE_JUDGE_GREAT_EARLY,
-        NOTE_JUDGE_GREAT_LATE,
-        NOTE_JUDGE_MISS,
-        NOTE_JUDGE_COUNT,
-    } NoteJudge;
-
-    typedef struct LevelTimePoint
-    {
-        Time time;
-        NoteType notes[GAME_KEY_COUNT];
-
-        ///// playing state ////
-        Time judgeTime[GAME_KEY_COUNT];
-        NoteJudge judgements[GAME_KEY_COUNT];
-    } LevelTimePoint;
-
-    typedef struct Level
-    {
-        ///// information and data /////
-        const TCHAR *musicName;
-        const TCHAR *author;
-        Time totalTime;
-        LevelDifficulty difficulty;
-        UINT32 tapCount;
-        UINT32 catchCount;
-        UINT32 noteCount;
-        UINT32 tpCount;
-        // sort after load
-        LevelTimePoint *timePoints;
-        // picture
-        // music
-        // etc.
-
-        ///// state /////
-        // time point index within level
-        UINT32 currentTPs[GAME_KEY_COUNT];
+        LevelNoteRecord *records[GAME_KEY_COUNT];
+        // record indices within level
+        UINT32 currentIndices[GAME_KEY_COUNT];
         // to calculate score
         UINT32 tapJudgesCount[NOTE_JUDGE_COUNT];
         UINT32 catchJudgeCount[2]; // catch : critical perfect or miss
-    } Level;
-
-    /////////////// Game //////////////////
+    } LevelRecord;
 
     typedef enum GamePage
     {
@@ -125,9 +69,10 @@ extern "C"
         GamePage currentPage;
         UINT32 currentLevelID;
         Level *pCurLevel;
+        GameLevelState levelState;
         Time levelBeginTime;
         // TODO: record paused time ?
-        GameLevelState levelState;
+        LevelRecord levelRecord;
         BOOL keyPressing[GAME_KEY_COUNT];
         Time keyPressTime[GAME_KEY_COUNT];
 
@@ -147,6 +92,9 @@ extern "C"
     //////// Utilities /////////
 
     UINT GameCalcNoteCenterY(Time noteTime, Time currentTime);
+
+    // not implemented
+    UINT GameLevelCalcScore();
 
 #ifdef __cplusplus
 }

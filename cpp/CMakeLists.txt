@@ -1,11 +1,13 @@
 set(MUG_CPP_HEADERS
     resource.h
     app.h
+    level.h
     game.h
 )
 
 set(MUG_CPP_SOURCES
     app.c
+    level.cpp
     game.c
 )
 

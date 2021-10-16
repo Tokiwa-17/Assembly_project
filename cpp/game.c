@@ -21,8 +21,10 @@ void GameInit()
     sGame.levelCount = 0;
     sGame.levels = NULL;
 
-    // home page
+    // state
     sGame.currentPage = GAME_PAGE_HOME;
+    sGame.currentLevelID = 0;
+    sGame.pCurLevel = NULL;
 }
 
 void GameShutdown()
@@ -33,28 +35,36 @@ void GameShutdown()
 #define LEVEL_START_DELAY 2000
 
 // when GamePage changed from GAME_PAGE_CHOOSE to GAME_PAGE_PLAYING
-void LevelReset(UINT levelIndex)
+void GameLevelReset(UINT levelIndex)
 {
     sGame.currentLevelID = levelIndex;
     sGame.pCurLevel = &sGame.levels[levelIndex];
     sGame.levelState = GAME_LEVEL_RESET;
-    for (UINT i = 0; i < sGame.pCurLevel->tpCount; ++i)
-        for (UINT j = 0; j < GAME_KEY_COUNT; ++j)
-            sGame.pCurLevel->timePoints[i].judgeTime[j] = 0;
     for (UINT i = 0; i < GAME_KEY_COUNT; ++i)
     {
-        sGame.pCurLevel->currentTPs[i] = 0;
+        SIZE_T count = sGame.pCurLevel->noteCounts[i];
+        sGame.levelRecord.records[i] = (LevelNoteRecord *)malloc(sizeof(LevelNoteRecord) * count);
+        memset(&sGame.levelRecord.records[i], 0, sizeof(LevelRecord) * count);
+        sGame.levelRecord.currentIndices[i] = 0;
         sGame.keyPressing[i] = FALSE;
     }
     for (UINT i = 0; i < NOTE_JUDGE_COUNT; ++i)
-        sGame.pCurLevel->tapJudgesCount[i] = 0;
-    sGame.pCurLevel->catchJudgeCount[0] = 0;
-    sGame.pCurLevel->catchJudgeCount[1] = 0;
+        sGame.levelRecord.tapJudgesCount[i] = 0;
+    sGame.levelRecord.catchJudgeCount[0] = 0;
+    sGame.levelRecord.catchJudgeCount[1] = 0;
 
     // need delay ?
     // PlaySound async
     sGame.levelState = GAME_LEVEL_PLAYING;
     sGame.levelBeginTime = timeGetTime() - sGame.judgeDelay;
+}
+
+// level play end
+void GameLevelEnd()
+{
+    for (UINT i = 0; i < GAME_KEY_COUNT; ++i)
+        free(&sGame.levelRecord.records[i]);
+    sGame.pCurLevel = NULL;
 }
 
 // -25ms ~ +25ms
@@ -67,82 +77,76 @@ void LevelReset(UINT levelIndex)
 
 void NoteTapJudgement(UINT index)
 {
-    UINT tpIndex = sGame.pCurLevel->currentTPs[index];
+    UINT curIndex = sGame.levelRecord.currentIndices[index];
     Time judgeTime = sGame.keyPressTime[index];
-    while (tpIndex < sGame.pCurLevel->tpCount)
+    while (curIndex < sGame.pCurLevel->noteCounts[index])
     {
-        LevelTimePoint *tp = &sGame.pCurLevel->timePoints[tpIndex];
-        if (tp->notes[index] == NOTE_CATCH)
+        LevelNote *note = &sGame.pCurLevel->notes[index][curIndex];
+        LevelNoteRecord *record = &sGame.levelRecord.records[index][curIndex];
+        if (note->type == NOTE_CATCH)
             // handle in other place
             break;
-        if (tp->notes[index] != NOTE_TAP)
+        // is tap
+        if (judgeTime > note->time)
         {
-            ++tpIndex;
-            continue;
-        }
-        NoteJudge *pJudgement = &tp->judgements[index];
-        if (judgeTime > tp->time)
-        {
-            Time diff = tp->judgeTime[index] - tp->time;
+            Time diff = record->judgeTime - note->time;
             if (diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT)
-                *pJudgement = NOTE_JUDGE_CRITICAL_PERFECT;
+                record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
             else if (diff <= NOTE_JUDGE_PERFECT_LIMIT)
-                *pJudgement = NOTE_JUDGE_PERFECT_LATE;
+                record->judgement = NOTE_JUDGE_PERFECT_LATE;
             else if (diff <= NOTE_JUDGE_GREAT_LIMIT)
-                *pJudgement = NOTE_JUDGE_GREAT_LATE;
+                record->judgement = NOTE_JUDGE_GREAT_LATE;
             else
-                *pJudgement = NOTE_JUDGE_MISS;
+                record->judgement = NOTE_JUDGE_MISS;
         }
         else
         {
-            Time diff = tp->time - tp->judgeTime[index];
+            Time diff = note->time - record->judgeTime;
             if (diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT)
-                *pJudgement = NOTE_JUDGE_CRITICAL_PERFECT;
+                record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
             else if (diff <= NOTE_JUDGE_PERFECT_LIMIT)
-                *pJudgement = NOTE_JUDGE_PERFECT_EARLY;
+                record->judgement = NOTE_JUDGE_PERFECT_EARLY;
             else if (diff <= NOTE_JUDGE_GREAT_LIMIT)
-                *pJudgement = NOTE_JUDGE_GREAT_EARLY;
+                record->judgement = NOTE_JUDGE_GREAT_EARLY;
             else
                 break; // too early
         }
-        tp->judgeTime[index] = judgeTime;
-        ++sGame.pCurLevel->tapJudgesCount[*pJudgement];
-        ++tpIndex;
-        if (*pJudgement != NOTE_JUDGE_MISS)
-            break; // !!!
+        record->judgeTime = judgeTime;
+        ++sGame.levelRecord.tapJudgesCount[record->judgement];
+        ++curIndex;
+        if (record->judgement != NOTE_JUDGE_MISS)
+            break; // !!! check next note
     }
-    sGame.pCurLevel->currentTPs[index] = tpIndex;
+    sGame.levelRecord.currentIndices[index] = curIndex;
 }
 
 void NoteCatchJudgement(UINT index, Time currentTime)
 {
-    UINT tpIndex = sGame.pCurLevel->currentTPs[index];
-    while (tpIndex < sGame.pCurLevel->tpCount)
+    UINT curIndex = sGame.levelRecord.currentIndices[index];
+    while (curIndex < sGame.pCurLevel->noteCounts[index])
     {
-        LevelTimePoint *tp = &sGame.pCurLevel->timePoints[tpIndex];
-        if (tp->notes[index] == NOTE_TAP)
+        LevelNote *note = &sGame.pCurLevel->notes[index][curIndex];
+        LevelNoteRecord *record = &sGame.levelRecord.records[index][curIndex];
+        if (note->type == NOTE_TAP)
             // handle in other place
             break;
-        else if (tp->notes[index] == NOTE_CATCH)
+        // is catch
+        if (note->time > currentTime + NOTE_JUDGE_PERFECT_LIMIT)
+            break; // too early
+        if (note->time + NOTE_JUDGE_PERFECT_LIMIT >= sGame.keyPressTime[index])
         {
-            if (tp->time + NOTE_JUDGE_CRITICAL_PERFECT_LIMIT < sGame.keyPressTime[index])
-                break; // too early
-            if (tp->time <= currentTime + NOTE_JUDGE_CRITICAL_PERFECT_LIMIT)
-            {
-                tp->judgeTime[index] = tp->time;
-                tp->judgements[index] = NOTE_JUDGE_CRITICAL_PERFECT;
-                ++sGame.pCurLevel->catchJudgeCount[0];
-            }
-            else
-            {
-                tp->judgements[index] = currentTime;
-                tp->judgements[index] = NOTE_JUDGE_MISS;
-                ++sGame.pCurLevel->catchJudgeCount[1];
-            }
+            record->judgeTime = note->time;
+            record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
+            ++sGame.levelRecord.catchJudgeCount[0];
         }
-        ++tpIndex;
+        {
+            record->judgeTime = currentTime;
+            record->judgement = NOTE_JUDGE_MISS;
+            ++sGame.levelRecord.catchJudgeCount[1];
+        }
+        ++curIndex;
     }
-    sGame.pCurLevel->currentTPs[index] = tpIndex;
+    sGame.levelRecord.currentIndices[index] = curIndex;
 }
 
 void GameKeyCallback(UINT8 keyCode, BOOL down, BOOL previousDown)
