@@ -38,8 +38,8 @@ _page 		dword	100
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
 szText			db	'TODO', 0
-WINDOW_HEIGHT 	dword 640
-WINDOW_WIDTH  	dword 480
+WINDOW_HEIGHT 	dword 750
+WINDOW_WIDTH  	dword 1334
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -51,22 +51,17 @@ WINDOW_WIDTH  	dword 480
 ; 画自定义背景
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _DrawCustomizedBackground	proc _hDC
-		local @hDcBack; 'Back' for 'background'. 
-		;demo: How to index an array.
-		;mov		eax,	1
-		;mov		ecx,	type NetworkMsg
-		;mul		ecx
-		;mov		inputQueue.msgs[eax].sender, 233
-		invoke	CreateCompatibleDC,_hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
+		local @hDcBack
+		; DC for background 
+		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
 		.if	_page == HOME_PAGE
-			invoke LoadBitmap, 0, HOME_PAGE
+			invoke LoadBitmap, hInstance, HOME_PAGE
 			invoke	SelectObject, @hDcBack, eax
-;		.elseif _page == HOME_MULTIPLE_PAGE
+;		.elseif _page == PLAY_PAGE
 ;			invoke	SelectObject, @hDcBack, _bg2
 		.endif
-		invoke	BitBlt,_hDC,0,0,WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack,0,0,SRCCOPY
-;		invoke	DeleteDC, @hDcBack ;回收资源（DC）
+		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
 		ret
 _DrawCustomizedBackground	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -91,7 +86,9 @@ _OnPaint	proc	_hWnd,_hDC
 ; 画自定义背景
 ;********************************************************************
 		invoke _DrawCustomizedBackground, @bufferDC
-
+;		画游戏相关内容
+		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
+		popad
 		ret
 _OnPaint endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
