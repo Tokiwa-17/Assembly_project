@@ -1,5 +1,6 @@
 set(MUG_HEADERS
-
+    utils.inc,
+    resource.inc
 )
 
 set(MUG_SOURCES
