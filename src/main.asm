@@ -18,12 +18,14 @@ include		kernel32.inc
 includelib	kernel32.lib
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
+WINDOW_HEIGHT 	equ 	960
+WINDOW_WIDTH  	equ		1280
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
 ICO_GAME	equ	1000
 
 ; Bitmap
-HOME_PAGE	equ 100
+INIT_PAGE	equ 100
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 数据段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -38,8 +40,6 @@ _page 		dword	100
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
 szText			db	'TODO', 0
-WINDOW_HEIGHT 	dword 750
-WINDOW_WIDTH  	dword 1334
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -55,13 +55,15 @@ _DrawCustomizedBackground	proc _hDC
 		; DC for background 
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
-		.if	_page == HOME_PAGE
-			invoke LoadBitmap, hInstance, HOME_PAGE
+		.if	_page == INIT_PAGE
+			invoke LoadBitmap, hInstance, INIT_PAGE
 			invoke	SelectObject, @hDcBack, eax
 ;		.elseif _page == PLAY_PAGE
 ;			invoke	SelectObject, @hDcBack, _bg2
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
+;			@hDcBack, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		ret
 _DrawCustomizedBackground	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -88,6 +90,8 @@ _OnPaint	proc	_hWnd,_hDC
 		invoke _DrawCustomizedBackground, @bufferDC
 ;		画游戏相关内容
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
+;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
+;			@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		popad
 		ret
 _OnPaint endp
@@ -141,7 +145,7 @@ _WinMain	proc
 		mov	@stWndClass.hbrBackground, COLOR_WINDOW + 1
 		mov	@stWndClass.lpszClassName, offset szClassName
 ;		加载图标句柄
-		invoke LoadCursor, 0, ICO_GAME
+		invoke LoadIcon, hInstance, ICO_GAME
 		mov @stWndClass.hIcon, eax
 		mov @stWndClass.hIconSm, eax
 		invoke	RegisterClassEx, addr @stWndClass
@@ -150,7 +154,7 @@ _WinMain	proc
 ;********************************************************************
 		invoke	CreateWindowEx, WS_EX_CLIENTEDGE, offset szClassName, offset szCaptionMain,\
 			WS_OVERLAPPEDWINDOW,\
-			100, 100, 640, 480,\
+			0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
 			NULL, NULL, hInstance, NULL
 		mov	hWinMain, eax
 		invoke	ShowWindow, hWinMain, SW_SHOWNORMAL
