@@ -4,8 +4,9 @@
 #define	ICO_GAME		1000
 
 #define INIT_PAGE       100
-
+#define SELECT_PAGE     101
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ICO_GAME	ICON		"Game.ico"
 INIT_PAGE   BITMAP      "init_bg.bmp"
+SELECT_PAGE BITMAP      "select_music.bmp"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

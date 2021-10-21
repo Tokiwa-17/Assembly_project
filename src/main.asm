@@ -16,16 +16,22 @@ include		user32.inc
 includelib	user32.lib
 include		kernel32.inc
 includelib	kernel32.lib
+
+include		utils.inc
+include		resource.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
-WINDOW_HEIGHT 	equ 	960
-WINDOW_WIDTH  	equ		1280
+WINDOW_HEIGHT 			equ 	960
+WINDOW_WIDTH  			equ		1280
+ID_TIMER				equ		1
+TIMER_MAIN_INTERVAL		equ		100
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
 ICO_GAME	equ	1000
 
 ; Bitmap
-INIT_PAGE	equ 100
+INIT_PAGE		equ		100
+SELECT_PAGE 	equ		101
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 数据段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -34,7 +40,8 @@ hInstance	dd		?
 hWinMain	dd		?
 
 .data
-_page 		dword	100
+_page 		dword		100
+keys		KeyState	<>
 
 .const
 szClassName		db	'MUG GAME', 0
@@ -47,54 +54,12 @@ szText			db	'TODO', 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 函数声明
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; 画自定义背景
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-_DrawCustomizedBackground	proc _hDC
-		local @hDcBack
-		; DC for background 
-		invoke	CreateCompatibleDC, _hDC; 
-		mov		@hDcBack, eax
-		.if	_page == INIT_PAGE
-			invoke LoadBitmap, hInstance, INIT_PAGE
-			invoke	SelectObject, @hDcBack, eax
-;		.elseif _page == PLAY_PAGE
-;			invoke	SelectObject, @hDcBack, _bg2
-		.endif
-		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
-;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
-;			@hDcBack, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
-		ret
-_DrawCustomizedBackground	endp
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; _Onpaint
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-_OnPaint	proc	_hWnd,_hDC
-		local	@stTime:SYSTEMTIME, @bufferDC; bufferDC is cache for pictures.
-		local	@bufferBmp
-		local	@i, @j
-		pushad
-;		invoke	GetLocalTime,addr @stTime
-;		invoke	_CalcClockParam
-;********************************************************************
-; 启用双缓冲绘图方式，避免界面闪烁
-;********************************************************************
-		invoke	CreateCompatibleDC, _hDC
-		mov		@bufferDC,	eax
-		invoke	CreateCompatibleBitmap, _hDC, WINDOW_WIDTH, WINDOW_HEIGHT
-		mov		@bufferBmp,	eax
-		invoke	SelectObject, @bufferDC, @bufferBmp
-;********************************************************************
-; 画自定义背景
-;********************************************************************
-		invoke _DrawCustomizedBackground, @bufferDC
-;		画游戏相关内容
-		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
-;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
-;			@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
-		popad
-		ret
-_OnPaint endp
+_InitGame						PROTO,		_hWnd:dword
+_DrawCustomizedBackground		PROTO,		_hDC:dword
+_OnPaint						PROTO,		_hWnd:dword, _hDC:dword
+_ProcessTimer					PROTO, 		hWnd:dword, wParam:dword
+_ComputeGameLogic				PROTO,		_hWnd:dword
+_UpdateKeyState					PROTO,		_wParam:dword, _keyDown:dword
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 窗口过程
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -111,7 +76,22 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 			invoke _OnPaint, hWnd, @hDc 
 			invoke	EndPaint, hWnd, addr @stPs
 ;********************************************************************
+;		sent when a window be created by calling the CreateWindowEx 
+;		or CreateWindow function.
+		.elseif eax == WM_CREATE
+			invoke _InitGame, hWnd
+;********************************************************************
+		.elseif eax == WM_KEYDOWN
+			invoke	_UpdateKeyState, wParam, 1
+;********************************************************************
+		.elseif eax == WM_KEYUP
+			invoke	_UpdateKeyState, wParam, 0
+;********************************************************************
+		.elseif eax == WM_TIMER
+			invoke _ProcessTimer, hWnd, wParam
+;********************************************************************
 		.elseif	eax ==	WM_CLOSE
+			invoke	KillTimer, hWnd, ID_TIMER
 			invoke	DestroyWindow, hWinMain
 			invoke	PostQuitMessage, NULL
 ;********************************************************************
@@ -171,6 +151,119 @@ _WinMain	proc
 		ret
 
 _WinMain	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_InitGame	proc	_hWnd
+;		Set Timer
+		invoke	SetTimer, _hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
+;		Load Bitmap
+		invoke	LoadBitmap, hInstance, INIT_PAGE
+		mov		_bg1, eax
+		invoke	LoadBitmap, hInstance, SELECT_PAGE
+		mov		_bg2, eax
+
+		ret
+
+_InitGame	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; 画自定义背景
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_DrawCustomizedBackground	proc _hDC
+		local @hDcBack
+		; DC for background 
+		invoke	CreateCompatibleDC, _hDC; 
+		mov		@hDcBack, eax
+		.if	_page == INIT_PAGE
+			invoke	SelectObject, @hDcBack, _bg1
+		
+		.elseif _page == SELECT_PAGE
+			invoke	SelectObject, @hDcBack, _bg2
+
+		.endif
+		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
+;			@hDcBack, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
+		ret
+_DrawCustomizedBackground	endp
+;********************************************************************
+_OnPaint	proc	_hWnd, _hDC
+		local	@stTime:SYSTEMTIME, @bufferDC; bufferDC is cache for pictures.
+		local	@bufferBmp
+		local	@i, @j
+		pushad
+;		invoke	GetLocalTime,addr @stTime
+;		invoke	_CalcClockParam
+;********************************************************************
+; 启用双缓冲绘图方式，避免界面闪烁
+;********************************************************************
+		invoke	CreateCompatibleDC, _hDC
+		mov		@bufferDC,	eax
+		invoke	CreateCompatibleBitmap, _hDC, WINDOW_WIDTH, WINDOW_HEIGHT
+		mov		@bufferBmp,	eax
+		invoke	SelectObject, @bufferDC, @bufferBmp
+;********************************************************************
+; 画自定义背景
+;********************************************************************
+		invoke _DrawCustomizedBackground, @bufferDC
+;		画游戏相关内容
+
+
+		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
+;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
+;			@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
+		popad
+		ret
+_OnPaint endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_ProcessTimer	proc	_hWnd, timerId
+		.if timerId == ID_TIMER
+			invoke	_ComputeGameLogic, _hWnd
+			invoke	InvalidateRect, _hWnd, NULL, FALSE
+		.else
+			ret
+		.endif
+		ret
+_ProcessTimer	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_ComputeGameLogic	proc  _hWnd
+	local	@i
+	pushad
+	;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
+	.if _page == INIT_PAGE
+		.if keys.key_return
+			mov _page, SELECT_PAGE
+			mov keys.key_return, 0
+		.endif
+
+
+	.endif
+
+	popad
+	ret
+_ComputeGameLogic	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_UpdateKeyState proc _wParam, _keyDown
+		local @timenow
+		;判断按键按下的状态
+		.if _keyDown != 0
+			invoke GetTickCount
+			mov	@timenow, eax
+		.else
+			mov @timenow, 0
+		.endif
+		mov eax, @timenow
+		.if		_wParam == VK_D
+			mov keys.key_d, eax
+		.elseif _wParam == VK_F
+			mov keys.key_f, eax
+		.elseif _wParam == VK_J
+			mov keys.key_j, eax
+		.elseif _wParam == VK_K
+			mov keys.key_k, eax
+		.elseif _wParam == VK_RETURN
+			mov keys.key_return, eax
+		.endif
+		ret
+_UpdateKeyState endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 start:
 		call	_WinMain
