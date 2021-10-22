@@ -170,21 +170,23 @@ _InitGame	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _DrawCustomizedBackground	proc _hDC
 		local @hDcBack
+		local @hOldObject
 		; DC for background 
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
 		.if	_page == INIT_PAGE
-			invoke	LoadBitmap, hInstance, INIT_PAGE
-			invoke	SelectObject, @hDcBack, eax
+			invoke	SelectObject, @hDcBack, _bg1
 		
 		.elseif _page == SELECT_PAGE
 			invoke	LoadBitmap, hInstance, SELECT_PAGE
-			invoke	SelectObject, @hDcBack, eax
+			invoke	SelectObject, @hDcBack, _bg2
 
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
 ;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
 ;			@hDcBack, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
+		invoke SelectObject, @hDcBack, @hOldObject
+		invoke DeleteDC, @hDcBack
 		ret
 _DrawCustomizedBackground	endp
 ;********************************************************************
