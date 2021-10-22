@@ -1,11 +1,10 @@
 set(MUG_HEADERS
     utils.inc,
-    resource.inc
-    #game.inc
+    resource.inc,
+    game.inc
 )
 
 set(MUG_SOURCES
-    #game.asm,
     main.asm
 )
 
