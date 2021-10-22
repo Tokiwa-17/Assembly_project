@@ -155,6 +155,7 @@ _WinMain	endp
 _InitGame	proc	_hWnd
 ;		Set Timer
 		invoke	SetTimer, _hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
+
 ;		Load Bitmap
 		invoke	LoadBitmap, hInstance, INIT_PAGE
 		mov		_bg1, eax
@@ -173,10 +174,12 @@ _DrawCustomizedBackground	proc _hDC
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
 		.if	_page == INIT_PAGE
-			invoke	SelectObject, @hDcBack, _bg1
+			invoke	LoadBitmap, hInstance, INIT_PAGE
+			invoke	SelectObject, @hDcBack, eax
 		
 		.elseif _page == SELECT_PAGE
-			invoke	SelectObject, @hDcBack, _bg2
+			invoke	LoadBitmap, hInstance, SELECT_PAGE
+			invoke	SelectObject, @hDcBack, eax
 
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
@@ -208,6 +211,11 @@ _OnPaint	proc	_hWnd, _hDC
 
 
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
+		invoke	GetStockObject,NULL_PEN
+		invoke	SelectObject,@bufferDC,eax
+		invoke	DeleteObject,eax
+		invoke	DeleteObject,@bufferBmp
+		invoke	DeleteObject,@bufferDC
 ;		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
 ;			@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		popad
