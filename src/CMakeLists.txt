@@ -6,6 +6,8 @@ set(MUG_HEADERS
 
 set(MUG_SOURCES
     main.asm
+    game.asm
+    utils.asm
 )
 
 add_executable(${PROJECT_NAME} ${MUG_SOURCES} resource.rc)
