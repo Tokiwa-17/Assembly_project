@@ -1,3 +1,5 @@
+ifndef __level_inc_
+__level_inc_ equ <1>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -19,29 +21,29 @@ NOTE_JUDGE_GREAT_EARLY          equ     3
 NOTE_JUDGE_GREAT_LATE           equ     4
 NOTE_JUDGE_MISS                 equ     5
 NOTE_JUDGE_COUNT                equ     6
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-.const
+; LevelNote 结构体
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-.data
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 LevelNote        struct
 Time            dword   0
 NoteType        dword   0
 LevelNote       ends
-
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; Level 结构体
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Level        struct
-musicName       db      MAX_NAME_LENGTH DUP(0)
-author          db      MAX_NAME_LENGTH DUP(0)
+musicName       db      MAX_NAME_LENGTH     DUP(0)
+author          db      MAX_NAME_LENGTH     DUP(0)
+musicPath       db      MAX_NAME_LENGTH     DUP(0)
+imagePath       db      MAX_NAME_LENGTH     DUP(0)
 LevelDifficulty dword   0
 totalTime       dword   0
 totalTapCount   dword   0
 totalCatchCount dword   0
 totalNoteCount  dword   0
-noteCounts      dword   GAME_KEY_COUNT  DUP(0)
+noteCounts      dword   GAME_KEY_COUNT      DUP(0)
 ; 指向LevelNote结构体的指针
-notes           dword   GAME_KEY_COUNT DUP(0)
+notes           dword   GAME_KEY_COUNT      DUP(0)
 Level       ends
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;函数声明
@@ -52,3 +54,4 @@ LevelLoad						PROTO,		filePath:dword, pLevel:dword
 LevelDestroy                    PROTO,      pLevel:dword
 ;    void LevelDestroy(Level *pLevel);
 
+endif

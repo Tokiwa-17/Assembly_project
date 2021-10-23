@@ -22,6 +22,12 @@ VSCode CMake-Tools
 #### 半透明
 + [`AlphaBlend`](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-alphablend)
 
+#### 文件
+
+* [`CreateFile`](https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea)
+* [`SetFilePointer`](https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointer)
+* [`ReadFile`](https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile)
+
 ## 写谱
 参照level-build/cyaegha.cpp
 含`main`函数的单文件，在同级CMakeLists中加上`add_level(level_name)`，指定以level_name.cpp生成可执行文件，这个程序将会生成二进制格式的谱面。
@@ -29,3 +35,20 @@ VSCode CMake-Tools
 ## 游戏设定界面
 #### 下落速度调整
 #### 延迟调整
+
+
+
+
+
+## TODO 
+
+1. 生成谱面（两个）
+
+2. 选歌页面（滑轮+回车选歌）
+
+3. 读谱子（二进制?)
+
+4. 游玩逻辑
+
+   
+

@@ -52,6 +52,8 @@ extern "C"
     {
         TCHAR musicName[MAX_NAME_LENGTH];
         TCHAR author[MAX_NAME_LENGTH];
+        TCHAR musicPath[MAX_NAME_LENGTH];
+        TCHAR imagePath[MAX_NAME_LENGTH];
         // etc.
         LevelDifficulty difficulty;
         // may be different from music time
