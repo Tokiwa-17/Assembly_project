@@ -48,7 +48,7 @@ keys		KeyState	<>
 .const
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
-szText			db	'TODO', 0
+Cyaegha         db  "levels\Cyaegha.level", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -256,7 +256,8 @@ _ComputeGameLogic	proc  _hWnd
 			mov _page, PLAY_PAGE
 			mov keys.key_return, 0
 		.elseif keys.key_d
-			invoke _readFile
+			mov eax, offset cyaephaOpern
+			invoke _readFile,  offset Cyaegha, offset cyaephaOpern
 			mov keys.key_d, 0
 		.endif
 

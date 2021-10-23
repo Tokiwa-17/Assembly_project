@@ -5,7 +5,6 @@ option casemap:none
 ; Include 文件定义
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
 include		utils.inc
-include     level.inc
 include     windows.inc 
 include     user32.inc 
 includelib  user32.lib 
