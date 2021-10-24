@@ -16,14 +16,11 @@ GAME_LEVEL_RESET        equ     0
 GAME_LEVEL_PLAYING      equ     1
 GAME_LEVEL_PAUSE        equ     2
 GAME_LEVEL_END          equ     3
+
+NOTE_JUDGE_CRITICAL_PERFECT_LIMIT       equ         25
+NOTE_JUDGE_PERFECT_LIMIT                equ         50
+NOTE_JUDGE_GREAT_LIMIT                  equ         100
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-LevelNoteRecord        struct
-key_d           dword   0
-key_f           dword   0
-key_j           dword   0
-key_k           dword   0
-key_return      dword   0
-LevelNoteRecord        ends
 
 LevelNoteRecord        struct
 judgeTime       dword   0
@@ -38,6 +35,7 @@ tapJudgesCount  dword   NOTE_JUDGE_COUNT    DUP(0)
 catchJudgeCount dword   2                   DUP(0)
 LevelRecord            ends
 
+.data
 ;        ///// information /////
 globalJudgeLineY      dword   0
 ;        ///// settings /////
@@ -61,10 +59,10 @@ globalKeyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameInit						PROTO
 GameShutdown                    PROTO
-GameKeyCallback                 PROTO,      keyCode:db, down:db, previousDown:db  
+;GameKeyCallback                 PROTO,      keyCode:db, down:db, previousDown:db  
 GameUpdate                      PROTO
 GameDraw                        PROTO,      hDC:dword
 GameCalcNoteCenterY             PROTO,      noteTime:dword, currentTime:dword
 GameLevelCalcScore              PROTO
-
+NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 endif
