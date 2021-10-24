@@ -126,7 +126,7 @@ void NoteCatchJudgement(UINT index, Time currentTime)
     while (curIndex < sGame.pCurLevel->noteCounts[index])
     {
         LevelNote *note = &sGame.pCurLevel->notes[index][curIndex];
-        LevelNoteRecord *record = &sGame.levelRecord.records[index][curIndex];
+        LevelNoteRecord *record = &((sGame.levelRecord).records[index][curIndex]);
         if (note->type == NOTE_TAP)
             // handle in other place
             break;
