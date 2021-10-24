@@ -256,7 +256,6 @@ _ComputeGameLogic	proc  _hWnd
 			mov _page, PLAY_PAGE
 			mov keys.key_return, 0
 		.elseif keys.key_d
-			mov eax, offset cyaephaOpern
 			invoke _readFile,  offset Cyaegha, offset cyaephaOpern
 			mov keys.key_d, 0
 		.endif
