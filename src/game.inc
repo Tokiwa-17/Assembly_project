@@ -17,19 +17,6 @@ GAME_LEVEL_PLAYING      equ     1
 GAME_LEVEL_PAUSE        equ     2
 GAME_LEVEL_END          equ     3
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-LevelNoteRecord        struct
-key_d           dword   0
-key_f           dword   0
-key_j           dword   0
-key_k           dword   0
-key_return      dword   0
-LevelNoteRecord        ends
-
-LevelNoteRecord        struct
-judgeTime       dword   0
-judgement       dword   0
-LevelNoteRecord        ends
-
 LevelRecord            struct
 records         dword   GAME_KEY_COUNT      DUP(0)
 ;record indices within level
@@ -47,7 +34,7 @@ globalKeyMaps         db      GAME_KEY_COUNT      DUP(0)
 ;        ///// data /////
 globalLevelCount      dword   0
 globalLevels          dword   0
-;        ///// state /////
+;        ///// state /////                ends
 globalCurrentPage     dword   0
 globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
