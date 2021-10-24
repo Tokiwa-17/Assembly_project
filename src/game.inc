@@ -22,9 +22,6 @@ key_f           dword   0
 key_j           dword   0
 key_k           dword   0
 key_return      dword   0
-LevelNoteRecord        ends
-
-LevelNoteRecord        struct
 judgeTime       dword   0
 judgement       dword   0
 LevelNoteRecord        ends
@@ -53,6 +50,7 @@ currentLevelID  dword   0
 pCurLevel       dword   0
 levelState      dword   0
 levelBeginTime  dword   0
+levelRecord     LevelRecord <>;
 keyPressing     db      GAME_KEY_COUNT      DUP(0)
 keyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 Game                   ends
