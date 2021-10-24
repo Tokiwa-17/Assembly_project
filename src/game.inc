@@ -21,7 +21,6 @@ NOTE_JUDGE_CRITICAL_PERFECT_LIMIT       equ         25
 NOTE_JUDGE_PERFECT_LIMIT                equ         50
 NOTE_JUDGE_GREAT_LIMIT                  equ         100
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 LevelNoteRecord        struct
 judgeTime       dword   0
 judgement       dword   0
@@ -45,7 +44,7 @@ globalKeyMaps         db      GAME_KEY_COUNT      DUP(0)
 ;        ///// data /////
 globalLevelCount      dword   0
 globalLevels          dword   0
-;        ///// state /////
+;        ///// state /////                ends
 globalCurrentPage     dword   0
 globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
