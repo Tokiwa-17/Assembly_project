@@ -39,25 +39,7 @@ keyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 _NoteTapJudgement proc 
-        local @curIndex:DWORD
-        local @judgeTime:DWORD
-
-        mov ebx, sGame.LevelRecord
-        mov @curIndex, ebx
-        mov esi, OFFSET sGame.keyPressTime
-        add esi, 4[eax]
-        mov ebx, [esi]
-        mov @judgeTime, ebx
-
-        jl  L1
-
-        ret
-    L1: 
-
         
-
-
-
 _NoteTapJudgement endp
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
