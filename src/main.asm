@@ -28,11 +28,12 @@ ID_TIMER				equ		1
 TIMER_MAIN_INTERVAL		equ		100
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
-ICO_GAME	equ	1000
+ICO_GAME		equ		1000
 
 ; Bitmap
 INIT_PAGE		equ		100
 SELECT_PAGE 	equ		101
+PLAY_PAGE		equ		102
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 数据段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -47,7 +48,7 @@ keys		KeyState	<>
 .const
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
-szText			db	'TODO', 0
+Cyaegha         db  "levels\Cyaegha.level", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -159,10 +160,11 @@ _InitGame	proc	_hWnd
 
 ;		Load Bitmap
 		invoke	LoadBitmap, hInstance, INIT_PAGE
-		mov		_bg1, eax
+		mov		_bg1, 	eax
 		invoke	LoadBitmap, hInstance, SELECT_PAGE
-		mov		_bg2, eax
-
+		mov		_bg2, 	eax
+		invoke	LoadBitmap, hInstance, PLAY_PAGE
+		mov		_bg3, 	eax
 		ret
 
 _InitGame	endp
@@ -181,6 +183,10 @@ _DrawCustomizedBackground	proc _hDC
 		.elseif _page == SELECT_PAGE
 			invoke	LoadBitmap, hInstance, SELECT_PAGE
 			invoke	SelectObject, @hDcBack, _bg2
+
+		.elseif _page == PLAY_PAGE
+			invoke	LoadBitmap, hInstance, PLAY_PAGE
+			invoke	SelectObject, @hDcBack, _bg3
 
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
@@ -244,7 +250,16 @@ _ComputeGameLogic	proc  _hWnd
 			mov _page, SELECT_PAGE
 			mov keys.key_return, 0
 		.endif
-
+	;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
+	.elseif _page == SELECT_PAGE
+		.if keys.key_return
+			mov _page, PLAY_PAGE
+			mov keys.key_return, 0
+		.elseif keys.key_d
+			mov eax, offset cyaephaOpern
+			invoke _readFile,  offset Cyaegha, offset cyaephaOpern
+			mov keys.key_d, 0
+		.endif
 
 	.endif
 
