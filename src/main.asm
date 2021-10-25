@@ -15,6 +15,7 @@ includelib	kernel32.lib
 include		utils.inc
 include		resource.inc
 include 	level.inc
+include		game.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
 WINDOW_HEIGHT 			equ 	960
