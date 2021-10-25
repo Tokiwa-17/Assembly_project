@@ -15,6 +15,10 @@ includelib	kernel32.lib
 include		utils.inc
 include		resource.inc
 include 	game.inc
+include     config.inc
+include     level.inc
+include 	winmm.inc
+includelib	winmm.lib
 
 .data
 judgeLineY      dword   0
@@ -38,7 +42,7 @@ keyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
-_NoteTapJudgement proc 
+_NoteTapJudgement proc index:dword
         
 _NoteTapJudgement endp
 
@@ -180,4 +184,78 @@ L2:
 L3:
     ret
 GameCalcNoteCenterY      endp
+
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameKeyCallback
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+GameKeyCallBack     proc       uses ecx esi,        keyCode:byte, down:byte, previousDown:byte
+    local @index
+    ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
+    .if globalCurrentPage == INIT_PAGE
+        .if keyCode == VK_RETURN
+            mov globalCurrentPage, SELECT_PAGE
+        .endif
+    ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
+    .elseif globalCurrentPage == SELECT_PAGE
+        .if keyCode == VK_RETURN
+            mov globalCurrentPage, PLAY_PAGE
+        .elseif keyCode == VK_D
+            invoke _readFile, offset Cyaegha, offset cyaephaOpern
+        .endif
+    ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
+    .elseif globalCurrentPage == PLAY_PAGE
+        mov ecx, GAME_KEY_COUNT
+L1:
+        mov eax, ecx
+        sub eax, 1
+        mov @index, eax
+        mov esi, offset globalKeyMaps
+        mov eax, type byte
+        mul @index
+        add esi, eax
+        mov al, byte ptr [esi]
+        ; if (sGame.keyMaps[index] == keyCode)
+        .if al == keyCode
+            mov al, down
+            cmp al, 0
+            je  L2
+        ; sGame.keyPressing[index] = True
+            mov esi, offset globalKeyPressing
+            mov eax, type byte
+            mul @index
+            add esi, eax
+            mov al, 1
+            mov byte ptr [esi], al
+        ; if (!previousDown)
+        mov al, previousDown
+        cmp al, 0
+        jne L3
+        mov esi, offset globalKeyPressTime
+        mov eax, type dword
+        mul @index
+        add esi, eax
+        invoke timeGetTime
+        sub eax, globalLevelBeginTime
+        mov [esi], eax
+        invoke _NoteTapJudgement, @index
+L2:
+        mov esi, offset globalKeyPressing
+        mov eax, type byte
+        mul @index
+        add esi, eax
+        mov eax, 0
+        mov byte ptr[esi], al
+        invoke timeGetTime
+        sub eax, globalLevelBeginTime
+        invoke NoteCatchJudgement, @index, eax
+L3:
+        jmp L4    
+        .endif
+        dec ecx
+        jne L1
+;        loop L1
+L4:
+    .endif
+    ret
+GameKeyCallBack     endp
 end

@@ -45,7 +45,7 @@ globalKeyMaps         db      GAME_KEY_COUNT      DUP(0)
 globalLevelCount      dword   0
 globalLevels          dword   0
 ;        ///// state /////                ends
-globalCurrentPage     dword   0
+globalCurrentPage     dword   100
 globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
 globalLevelState      dword   0
@@ -58,7 +58,7 @@ globalKeyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameInit						PROTO
 GameShutdown                    PROTO
-;GameKeyCallback                 PROTO,      keyCode:db, down:db, previousDown:db  
+GameKeyCallBack                 PROTO,      keyCode:byte, down:byte, previousDown:byte 
 GameUpdate                      PROTO
 GameDraw                        PROTO,      hDC:dword
 GameCalcNoteCenterY             PROTO,      noteTime:dword, currentTime:dword
