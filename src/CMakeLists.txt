@@ -1,13 +1,16 @@
 set(MUG_HEADERS
     utils.inc,
     resource.inc,
-    game.inc
+    game.inc,
+    config.inc,
+    level.inc
 )
 
 set(MUG_SOURCES
     main.asm
     game.asm
     utils.asm
+    level.asm
 )
 
 add_executable(${PROJECT_NAME} ${MUG_SOURCES} resource.rc)

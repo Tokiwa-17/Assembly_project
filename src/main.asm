@@ -32,7 +32,7 @@ GameKeyCallBack                 PROTO,      keyCode:byte, down:byte, previousDow
 _OnPaint						PROTO,		_hWnd:dword, _hDC:dword
 _ProcessTimer					PROTO, 		hWnd:dword, wParam:dword
 _ComputeGameLogic				PROTO,		_hWnd:dword
-_UpdateKeyState					PROTO,		_wParam:dword, _keyDown:dword
+_UpdateKeyState					PROTO,		_wParam:dword, _lParam:dword, _keyDown:dword
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 窗口过程
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -40,7 +40,7 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 		local	@stPs:PAINTSTRUCT
 		local	@stRect:RECT
 		local	@hDc
-		local	@key:byte
+		local	@key:byte, @down:byte, @previousDown:byte
 
 		mov	eax,uMsg
 ;********************************************************************
@@ -57,21 +57,48 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 ;********************************************************************
 		.elseif eax == WM_KEYDOWN
 			;invoke	_UpdateKeyState, wParam, 1
-			.if wParam == VK_D
-				mov @key, 'D'
+			.if wParam == VK_F
+				mov @key, 'F'
+			.elseif wParam == VK_G
+				mov @key, 'G'
+			.elseif wParam == VK_H
+				mov @key, 'H'
+			.elseif wParam == VK_J
+				mov @key, 'J'
 			.endif
-			mov cl, 1
-			mov bl, 0
-			invoke GameKeyCallBack, @key, cl, bl
+			mov @down, 1
+			.if lParam == VK_F
+				mov @previousDown, 'F'
+			.elseif lParam == VK_G
+				mov @previousDown, 'G'
+			.elseif lParam == VK_H
+				mov @previousDown, 'H'
+			.elseif lParam == VK_J
+				mov @previousDown, 'J'
+			.endif
+			invoke GameKeyCallBack, @key, @down, @previousDown
 ;********************************************************************
 		.elseif eax == WM_KEYUP
-			.if wParam == VK_D
-				mov @key, 'D'
+			.if wParam == VK_F
+				mov @key, 'F'
+			.elseif wParam == VK_G
+				mov @key, 'G'
+			.elseif wParam == VK_H
+				mov @key, 'H'
+			.elseif wParam == VK_J
+				mov @key, 'J'
 			.endif
-			mov cl, 0
-			mov bl, 0
-			;invoke	_UpdateKeyState, wParam, 0
-			invoke GameKeyCallBack, @key, cl, bl
+			mov @down, 0
+			.if lParam == VK_F
+				mov @previousDown, 'F'
+			.elseif lParam == VK_G
+				mov @previousDown, 'G'
+			.elseif lParam == VK_H
+				mov @previousDown, 'H'
+			.elseif lParam == VK_J
+				mov @previousDown, 'J'
+			.endif
+			invoke GameKeyCallBack, @key, @down, @previousDown
 ;********************************************************************
 		.elseif eax == WM_TIMER
 			invoke _ProcessTimer, hWnd, wParam
@@ -187,17 +214,14 @@ GameKeyCallBack     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     local @index
     ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
     .if globalCurrentPage == INIT_PAGE
-        ;.if keyCode == VK_RETURN
-        ;    mov globalCurrentPage, SELECT_PAGE
         .if down
             mov globalCurrentPage, SELECT_PAGE
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
-        .if keyCode == VK_RETURN
+        .if keyCode == 'F'
             mov globalCurrentPage, PLAY_PAGE
-        .elseif keyCode == VK_D
-            invoke _readFile, offset Cyaegha, offset cyaephaOpern
+			invoke _readFile, offset Cyaegha, offset cyaephaOpern
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
@@ -324,8 +348,8 @@ _ComputeGameLogic	proc  _hWnd
 	ret
 _ComputeGameLogic	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-_UpdateKeyState proc _wParam, _keyDown
-		local @timenow
+_UpdateKeyState proc _wParam, _lParam, _keyDown
+		local @timenow, @key:byte, @down:byte, @previousDown:byte
 		;判断按键按下的状态
 		.if _keyDown != 0
 			invoke GetTickCount
@@ -334,17 +358,16 @@ _UpdateKeyState proc _wParam, _keyDown
 			mov @timenow, 0
 		.endif
 		mov eax, @timenow
-		.if		_wParam == VK_D
-			mov keys.key_d, eax
-		.elseif _wParam == VK_F
-			mov keys.key_f, eax
+		.if		_wParam == VK_F
+			mov @key, 'F'
+		.elseif _wParam == VK_G
+			mov @key, 'G'
+		.elseif _wParam == VK_H
+			mov @key, 'H'
 		.elseif _wParam == VK_J
-			mov keys.key_j, eax
-		.elseif _wParam == VK_K
-			mov keys.key_k, eax
-		.elseif _wParam == VK_RETURN
-			mov keys.key_return, eax
+			mov @key, 'J'
 		.endif
+		
 		ret
 _UpdateKeyState endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
