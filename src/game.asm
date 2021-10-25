@@ -128,7 +128,7 @@ L7:
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     mov esi, @note
     mov eax, (LevelNote PTR [esi]).Time
-    mov esi, judgeTime
+    mov esi, @judgeTime
     .IF esi > eax
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   Time diff = record->judgeTime - note->time;
