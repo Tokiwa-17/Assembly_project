@@ -82,7 +82,7 @@ void NoteTapJudgement(UINT index)
     while (curIndex < sGame.pCurLevel->noteCounts[index])
     {
         LevelNote *note = &sGame.pCurLevel->notes[index][curIndex];
-        LevelNoteRecord *record = &sGame.levelRecord.records[index][curIndex];
+        LevelNoteRecord *record = &((sGame.levelRecord).records[index][curIndex]);
         if (note->type == NOTE_CATCH)
             // handle in other place
             break;
@@ -139,6 +139,7 @@ void NoteCatchJudgement(UINT index, Time currentTime)
             record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
             ++sGame.levelRecord.catchJudgeCount[0];
         }
+        else
         {
             record->judgeTime = currentTime;
             record->judgement = NOTE_JUDGE_MISS;
