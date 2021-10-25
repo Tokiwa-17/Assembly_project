@@ -52,3 +52,13 @@ VSCode CMake-Tools
 - [ ] 选歌页面
 - [ ] 绘制事件
 
+
+
+10/25 TODO
+
+- [ ] 谱面二
+- [ ] GameKeyCallback（除游玩页面）
+- [ ] NoteTapJudgement
+- [x] GameCalcNoteCenterY
+- [ ] 开始游戏后的处理，得分，音效
+

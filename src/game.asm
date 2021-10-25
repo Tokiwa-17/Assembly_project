@@ -220,9 +220,6 @@ L9:
     mov dword PTR [esi], eax
     ret
 NoteTapJudgement endp
-
-
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteCatchJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -318,7 +315,6 @@ L7:
     mov esi, offset globalLevelRecord.catchJudgeCount
     add esi, 4
     inc dword PTR [esi]
-
     mov eax, @curIndex
     add eax, 1
     mov @curIndex, eax
