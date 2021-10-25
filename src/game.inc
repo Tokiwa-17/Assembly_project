@@ -63,6 +63,6 @@ GameUpdate                      PROTO
 GameCalcNoteCenterY             PROTO,      noteTime:dword, currentTime:dword
 GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
-_NoteTapJudgement               PROTO,      index:dword
+NoteTapJudgement                PROTO,      index:dword
 GameLevelReset                  PROTO,      levelIndex:dword
 endif

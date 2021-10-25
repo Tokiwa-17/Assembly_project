@@ -58,7 +58,7 @@ VSCode CMake-Tools
 
 - [ ] 谱面二
 - [x] GameKeyCallback（除游玩页面）
-- [ ] NoteTapJudgement
+- [x] NoteTapJudgement
 - [x] GameCalcNoteCenterY
 - [ ] 开始游戏后的处理，得分，音效
 

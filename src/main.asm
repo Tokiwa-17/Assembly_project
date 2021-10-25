@@ -234,7 +234,7 @@ L1:
         invoke timeGetTime
         sub eax, globalLevelBeginTime
         mov [esi], eax
-        invoke _NoteTapJudgement, @index
+        invoke NoteTapJudgement, @index
 L2:
         mov esi, offset globalKeyPressing
         mov eax, type byte
