@@ -1,8 +1,3 @@
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; 使用 ./nmake 或下列命令进行编译和链接:
-; ml /c /coff main.asm
-; Link /subsystem:windows main.obj
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .386
 .model flat,stdcall
 option casemap:none
@@ -20,35 +15,8 @@ includelib	kernel32.lib
 include		utils.inc
 include		resource.inc
 include 	level.inc
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; EQU 等值段
-WINDOW_HEIGHT 			equ 	960
-WINDOW_WIDTH  			equ		1280
-ID_TIMER				equ		1
-TIMER_MAIN_INTERVAL		equ		100
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; ico
-ICO_GAME		equ		1000
-
-; Bitmap
-INIT_PAGE		equ		100
-SELECT_PAGE 	equ		101
-PLAY_PAGE		equ		102
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; 数据段
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-.data?
-hInstance	dd		?
-hWinMain	dd		?
-
-.data
-_page 		dword		100
-keys		KeyState	<>
-
-.const
-szClassName		db	'MUG GAME', 0
-szCaptionMain	db	'MUG', 0
-Cyaegha         db  "levels\Cyaegha.level", 0
+include		game.inc
+include		config.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -177,14 +145,14 @@ _DrawCustomizedBackground	proc _hDC
 		; DC for background 
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
-		.if	_page == INIT_PAGE
+		.if	globalCurrentPage == INIT_PAGE
 			invoke	SelectObject, @hDcBack, _bg1
 		
-		.elseif _page == SELECT_PAGE
+		.elseif globalCurrentPage == SELECT_PAGE
 			invoke	LoadBitmap, hInstance, SELECT_PAGE
 			invoke	SelectObject, @hDcBack, _bg2
 
-		.elseif _page == PLAY_PAGE
+		.elseif globalCurrentPage == PLAY_PAGE
 			invoke	LoadBitmap, hInstance, PLAY_PAGE
 			invoke	SelectObject, @hDcBack, _bg3
 
@@ -245,18 +213,17 @@ _ComputeGameLogic	proc  _hWnd
 	local	@i
 	pushad
 	;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
-	.if _page == INIT_PAGE
+	.if globalCurrentPage == INIT_PAGE
 		.if keys.key_return
-			mov _page, SELECT_PAGE
+			mov globalCurrentPage, SELECT_PAGE
 			mov keys.key_return, 0
 		.endif
 	;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
-	.elseif _page == SELECT_PAGE
+	.elseif globalCurrentPage == SELECT_PAGE
 		.if keys.key_return
-			mov _page, PLAY_PAGE
+			mov globalCurrentPage, PLAY_PAGE
 			mov keys.key_return, 0
 		.elseif keys.key_d
-			mov eax, offset cyaephaOpern
 			invoke _readFile,  offset Cyaegha, offset cyaephaOpern
 			mov keys.key_d, 0
 		.endif
