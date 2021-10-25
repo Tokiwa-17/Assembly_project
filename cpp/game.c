@@ -12,10 +12,10 @@ void GameInit()
     // Load game settings ?
     sGame.speedLevel = 8;
     sGame.judgeDelay = 0;
-    sGame.keyMaps[0] = 'F';
-    sGame.keyMaps[1] = 'G';
-    sGame.keyMaps[2] = 'H';
-    sGame.keyMaps[3] = 'J';
+    sGame.keyMaps[0] = 'D';
+    sGame.keyMaps[1] = 'F';
+    sGame.keyMaps[2] = 'J';
+    sGame.keyMaps[3] = 'K';
 
     // Load data
     sGame.levelCount = 0;

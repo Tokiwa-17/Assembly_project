@@ -11,6 +11,8 @@ include		user32.inc
 includelib	user32.lib
 include		kernel32.inc
 includelib	kernel32.lib
+include 	winmm.inc
+includelib	winmm.lib
 
 include		utils.inc
 include		resource.inc
@@ -25,7 +27,8 @@ include		config.inc
 ; 函数声明
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _InitGame						PROTO,		_hWnd:dword
-_DrawCustomizedBackground		PROTO,		_hDC:dword
+GameDraw						PROTO,		_hDC:dword
+GameKeyCallBack                 PROTO,      keyCode:byte, down:byte, previousDown:byte 
 _OnPaint						PROTO,		_hWnd:dword, _hDC:dword
 _ProcessTimer					PROTO, 		hWnd:dword, wParam:dword
 _ComputeGameLogic				PROTO,		_hWnd:dword
@@ -37,13 +40,14 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 		local	@stPs:PAINTSTRUCT
 		local	@stRect:RECT
 		local	@hDc
+		local	@key:byte
 
 		mov	eax,uMsg
 ;********************************************************************
 		.if	eax ==	WM_PAINT
 			invoke	BeginPaint, hWnd, addr @stPs
-			mov	@hDc, eax
-			invoke _OnPaint, hWnd, @hDc 
+			mov		@hDc, eax
+			invoke 	_OnPaint, hWnd, @hDc
 			invoke	EndPaint, hWnd, addr @stPs
 ;********************************************************************
 ;		sent when a window be created by calling the CreateWindowEx 
@@ -52,10 +56,22 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 			invoke _InitGame, hWnd
 ;********************************************************************
 		.elseif eax == WM_KEYDOWN
-			invoke	_UpdateKeyState, wParam, 1
+			;invoke	_UpdateKeyState, wParam, 1
+			.if wParam == VK_D
+				mov @key, 'D'
+			.endif
+			mov cl, 1
+			mov bl, 0
+			invoke GameKeyCallBack, @key, cl, bl
 ;********************************************************************
 		.elseif eax == WM_KEYUP
-			invoke	_UpdateKeyState, wParam, 0
+			.if wParam == VK_D
+				mov @key, 'D'
+			.endif
+			mov cl, 0
+			mov bl, 0
+			;invoke	_UpdateKeyState, wParam, 0
+			invoke GameKeyCallBack, @key, cl, bl
 ;********************************************************************
 		.elseif eax == WM_TIMER
 			invoke _ProcessTimer, hWnd, wParam
@@ -137,9 +153,9 @@ _InitGame	proc	_hWnd
 
 _InitGame	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; 画自定义背景
+; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-_DrawCustomizedBackground	proc _hDC
+GameDraw	proc _hDC
 		local @hDcBack
 		local @hOldObject
 		; DC for background 
@@ -149,11 +165,11 @@ _DrawCustomizedBackground	proc _hDC
 			invoke	SelectObject, @hDcBack, _bg1
 		
 		.elseif globalCurrentPage == SELECT_PAGE
-			invoke	LoadBitmap, hInstance, SELECT_PAGE
+			;invoke	LoadBitmap, hInstance, SELECT_PAGE
 			invoke	SelectObject, @hDcBack, _bg2
 
 		.elseif globalCurrentPage == PLAY_PAGE
-			invoke	LoadBitmap, hInstance, PLAY_PAGE
+			;invoke	LoadBitmap, hInstance, PLAY_PAGE
 			invoke	SelectObject, @hDcBack, _bg3
 
 		.endif
@@ -163,7 +179,82 @@ _DrawCustomizedBackground	proc _hDC
 		invoke SelectObject, @hDcBack, @hOldObject
 		invoke DeleteDC, @hDcBack
 		ret
-_DrawCustomizedBackground	endp
+GameDraw	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameKeyCallback
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+GameKeyCallBack     proc       uses eax ecx esi,        keyCode:byte, down:byte, previousDown:byte
+    local @index
+    ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
+    .if globalCurrentPage == INIT_PAGE
+        ;.if keyCode == VK_RETURN
+        ;    mov globalCurrentPage, SELECT_PAGE
+        .if down
+            mov globalCurrentPage, SELECT_PAGE
+        .endif
+    ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
+    .elseif globalCurrentPage == SELECT_PAGE
+        .if keyCode == VK_RETURN
+            mov globalCurrentPage, PLAY_PAGE
+        .elseif keyCode == VK_D
+            invoke _readFile, offset Cyaegha, offset cyaephaOpern
+        .endif
+    ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
+    .elseif globalCurrentPage == PLAY_PAGE
+        mov ecx, GAME_KEY_COUNT
+L1:
+        mov eax, ecx
+        sub eax, 1
+        mov @index, eax
+        mov esi, offset globalKeyMaps
+        mov eax, type byte
+        mul @index
+        add esi, eax
+        mov al, byte ptr [esi]
+        ; if (sGame.keyMaps[index] == keyCode)
+        .if al == keyCode
+            mov al, down
+            cmp al, 0
+            je  L2
+        ; sGame.keyPressing[index] = True
+            mov esi, offset globalKeyPressing
+            mov eax, type byte
+            mul @index
+            add esi, eax
+            mov al, 1
+            mov byte ptr [esi], al
+        ; if (!previousDown)
+        mov al, previousDown
+        cmp al, 0
+        jne L3
+        mov esi, offset globalKeyPressTime
+        mov eax, type dword
+        mul @index
+        add esi, eax
+        invoke timeGetTime
+        sub eax, globalLevelBeginTime
+        mov [esi], eax
+        invoke _NoteTapJudgement, @index
+L2:
+        mov esi, offset globalKeyPressing
+        mov eax, type byte
+        mul @index
+        add esi, eax
+        mov eax, 0
+        mov byte ptr[esi], al
+        invoke timeGetTime
+        sub eax, globalLevelBeginTime
+        invoke NoteCatchJudgement, @index, eax
+L3:
+        jmp L4    
+        .endif
+        dec ecx
+        jne L1
+;        loop L1
+L4:
+    .endif
+    ret
+GameKeyCallBack     endp
 ;********************************************************************
 _OnPaint	proc	_hWnd, _hDC
 		local	@stTime:SYSTEMTIME, @bufferDC; bufferDC is cache for pictures.
@@ -183,10 +274,9 @@ _OnPaint	proc	_hWnd, _hDC
 ;********************************************************************
 ; 画自定义背景
 ;********************************************************************
-		invoke _DrawCustomizedBackground, @bufferDC
+		invoke GameDraw, @bufferDC
+;		invoke GameDraw, @bufferDC
 ;		画游戏相关内容
-
-
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
 		invoke	GetStockObject,NULL_PEN
 		invoke	SelectObject,@bufferDC,eax

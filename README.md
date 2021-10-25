@@ -57,7 +57,7 @@ VSCode CMake-Tools
 10/25 TODO
 
 - [ ] 谱面二
-- [ ] GameKeyCallback（除游玩页面）
+- [x] GameKeyCallback（除游玩页面）
 - [ ] NoteTapJudgement
 - [x] GameCalcNoteCenterY
 - [ ] 开始游戏后的处理，得分，音效

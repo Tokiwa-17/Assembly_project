@@ -43,6 +43,7 @@ keyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteTapJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 NoteTapJudgement proc  uses  esi ecx,  index
@@ -223,7 +224,7 @@ NoteTapJudgement endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteCatchJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-NoteCatchJudgement	proc    uses  esi ecx,  index, currentTime
+NoteCatchJudgement	proc    uses  eax esi ecx,  index, currentTime
     local @curIndex
     local @note
     local @record
@@ -306,6 +307,7 @@ L6:
     mov (LevelNoteRecord PTR [esi]).judgement, eax
     mov esi, offset globalLevelRecord.catchJudgeCount
     inc dword PTR [esi]
+    jmp L8
 L7:
     mov eax, currentTime
     mov esi, @record
@@ -315,6 +317,7 @@ L7:
     mov esi, offset globalLevelRecord.catchJudgeCount
     add esi, 4
     inc dword PTR [esi]
+L8:
     mov eax, @curIndex
     add eax, 1
     mov @curIndex, eax
@@ -322,19 +325,17 @@ L7:
 endWhile:
     mov esi, offset globalLevelRecord.currentIndices
     mov ecx, index
-L8:
+L9:
     add esi, 4
-    loop L8
+    loop L9
     mov eax, @curIndex
     mov dword PTR [esi], eax
     ret
 NoteCatchJudgement  endp
-
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameCalcNoteCenterY
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameCalcNoteCenterY     proc    uses ebx,    noteTime, currentTime
+GameCalcNoteCenterY     proc    uses eax ebx,    noteTime, currentTime
     
     mov eax, currentTime
     cmp eax, noteTime
@@ -357,78 +358,10 @@ L2:
 L3:
     ret
 GameCalcNoteCenterY      endp
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; GameKeyCallback
+; GameLevelReset
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameKeyCallBack     proc       uses ecx esi,        keyCode:byte, down:byte, previousDown:byte
-    local @index
-    ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
-    .if globalCurrentPage == INIT_PAGE
-        .if keyCode == VK_RETURN
-            mov globalCurrentPage, SELECT_PAGE
-        .endif
-    ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
-    .elseif globalCurrentPage == SELECT_PAGE
-        .if keyCode == VK_RETURN
-            mov globalCurrentPage, PLAY_PAGE
-        .elseif keyCode == VK_D
-            invoke _readFile, offset Cyaegha, offset cyaephaOpern
-        .endif
-    ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
-    .elseif globalCurrentPage == PLAY_PAGE
-        mov ecx, GAME_KEY_COUNT
-L1:
-        mov eax, ecx
-        sub eax, 1
-        mov @index, eax
-        mov esi, offset globalKeyMaps
-        mov eax, type byte
-        mul @index
-        add esi, eax
-        mov al, byte ptr [esi]
-        ; if (sGame.keyMaps[index] == keyCode)
-        .if al == keyCode
-            mov al, down
-            cmp al, 0
-            je  L2
-        ; sGame.keyPressing[index] = True
-            mov esi, offset globalKeyPressing
-            mov eax, type byte
-            mul @index
-            add esi, eax
-            mov al, 1
-            mov byte ptr [esi], al
-        ; if (!previousDown)
-        mov al, previousDown
-        cmp al, 0
-        jne L3
-        mov esi, offset globalKeyPressTime
-        mov eax, type dword
-        mul @index
-        add esi, eax
-        invoke timeGetTime
-        sub eax, globalLevelBeginTime
-        mov [esi], eax
-        invoke _NoteTapJudgement, @index
-L2:
-        mov esi, offset globalKeyPressing
-        mov eax, type byte
-        mul @index
-        add esi, eax
-        mov eax, 0
-        mov byte ptr[esi], al
-        invoke timeGetTime
-        sub eax, globalLevelBeginTime
-        invoke NoteCatchJudgement, @index, eax
-L3:
-        jmp L4    
-        .endif
-        dec ecx
-        jne L1
-;        loop L1
-L4:
-    .endif
+GameLevelReset      proc    uses esi eax ebx    levelIndex
     ret
-GameKeyCallBack     endp
+GameLevelReset      endp
 end
