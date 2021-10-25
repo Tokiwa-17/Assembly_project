@@ -4,6 +4,7 @@ __game_inc_ equ <1>
 ; Include 文件定义
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 include 	level.inc
+include     windows.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -58,10 +59,10 @@ globalKeyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameInit						PROTO
 GameShutdown                    PROTO
-GameKeyCallBack                 PROTO,      keyCode:byte, down:byte, previousDown:byte 
 GameUpdate                      PROTO
-GameDraw                        PROTO,      hDC:dword
 GameCalcNoteCenterY             PROTO,      noteTime:dword, currentTime:dword
 GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
+_NoteTapJudgement               PROTO,      index:dword
+GameLevelReset                  PROTO,      levelIndex:dword
 endif
