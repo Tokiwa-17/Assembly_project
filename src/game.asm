@@ -150,5 +150,34 @@ L8:
     loop L8
     mov eax, @curIndex
     mov dword PTR [esi], eax
+    ret
 NoteCatchJudgement  endp
+
+
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameCalcNoteCenterY
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+GameCalcNoteCenterY     proc    uses ebx,    noteTime, currentTime
+    
+    mov eax, currentTime
+    cmp eax, noteTime
+    jbe     L2
+L1:
+    mov eax, currentTime
+    sub eax, noteTime
+    mul globalSpeedLevel
+    shr eax, 4
+    add eax, globalJudgeLineY
+    jmp     L3
+L2:
+    mov eax, noteTime
+    sub eax, currentTime
+    mul globalSpeedLevel
+    shr eax, 4
+    mov ebx, globalJudgeLineY
+    sub ebx, eax
+    mov eax, ebx
+L3:
+    ret
+GameCalcNoteCenterY      endp
 end
