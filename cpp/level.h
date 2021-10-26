@@ -11,6 +11,7 @@ extern "C"
 #include <Windows.h>
 
 #define GAME_KEY_COUNT 4
+#define GAME_MAX_NOTES 512
 #define MAX_NAME_LENGTH 128
 
     typedef DWORD Time;
@@ -62,7 +63,7 @@ extern "C"
         UINT32 totalCatchCount;
         UINT32 totalNoteCount;
         UINT32 noteCounts[GAME_KEY_COUNT];
-        LevelNote *notes[GAME_KEY_COUNT];
+        LevelNote notes[GAME_KEY_COUNT][GAME_MAX_NOTES];
     } Level;
 
     int LevelLoad(const TCHAR *filePath, Level* pLevel);

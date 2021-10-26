@@ -89,7 +89,7 @@ void NoteTapJudgement(UINT index)
         // is tap
         if (judgeTime > note->time)
         {
-            Time diff = record->judgeTime - note->time;
+            Time diff = judgeTime - note->time;
             if (diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT)
                 record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
             else if (diff <= NOTE_JUDGE_PERFECT_LIMIT)
@@ -101,7 +101,7 @@ void NoteTapJudgement(UINT index)
         }
         else
         {
-            Time diff = note->time - record->judgeTime;
+            Time diff = note->time - judgeTime;
             if (diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT)
                 record->judgement = NOTE_JUDGE_CRITICAL_PERFECT;
             else if (diff <= NOTE_JUDGE_PERFECT_LIMIT)
@@ -131,6 +131,7 @@ void NoteCatchJudgement(UINT index, Time currentTime)
             // handle in other place
             break;
         // is catch
+        // FIXME
         if (note->time > currentTime + NOTE_JUDGE_PERFECT_LIMIT)
             break; // too early
         if (note->time + NOTE_JUDGE_PERFECT_LIMIT >= sGame.keyPressTime[index])

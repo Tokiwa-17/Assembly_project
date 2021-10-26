@@ -1,17 +1,19 @@
 set(MUG_HEADERS
-    utils.inc,
-    resource.inc,
-    game.inc,
-    config.inc,
+    resource.inc
+    audio.inc
     level.inc
+    game.inc
 )
 
 set(MUG_SOURCES
-    main.asm
-    game.asm
-    utils.asm
+    audio.asm
     level.asm
+    game.asm
+    main.asm
 )
+
+source_group("headers" FILES ${MUG_HEADERS})
+source_group("sources" FILES ${MUG_SOURCES})
 
 add_executable(${PROJECT_NAME} ${MUG_SOURCES} resource.rc)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ASM_MASM)
