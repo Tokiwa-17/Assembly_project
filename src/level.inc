@@ -4,6 +4,7 @@ __level_inc_ equ <1>
 ; EQU 等值段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GAME_KEY_COUNT          equ     4
+MAX_NOTE_LENGTH         equ     512
 MAX_NAME_LENGTH         equ     128
 
 DIFFICULTY_EASY         equ     0
@@ -48,10 +49,10 @@ Level       ends
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;函数声明
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-LevelLoad						PROTO,		filePath:dword, pLevel:dword
+LevelLoad PROTO, opernNamePtr: ptr sbyte, opernInstancePtr: ptr Level
 ;    int LevelLoad(const TCHAR *filePath, Level* pLevel); 
 
-LevelDestroy                    PROTO,      pLevel:dword
+LevelDestroy PROTO,      pLevel: ptr Level
 ;    void LevelDestroy(Level *pLevel);
 
 endif
