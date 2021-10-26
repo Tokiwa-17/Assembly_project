@@ -1,0 +1,25 @@
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#include		<resource.h>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#define	ICO_MAIN		10000
+#define	DLG_MAIN		10000
+#define DLG_SPEED		10001
+#define IDC_CANCEL		10002
+#define DLG_DELAY       10003
+#define DLG_KEY         10004
+
+DLG_MAIN DIALOG 227, 187, 129, 96
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Settings"
+FONT 9, "MS Shell Dlg"
+{
+ LTEXT "Speed", -1, 10, 10, 34, 8
+ EDITTEXT DLG_SPEED, 47, 8, 71, 12, ES_NUMBER | WS_BORDER | WS_TABSTOP
+ LTEXT "Delay", -2, 10, 29, 34, 8
+ EDITTEXT DLG_DELAY, 47, 27, 71, 12, ES_NUMBER | WS_BORDER | WS_TABSTOP
+ LTEXT "Key", -3, 10, 51, 34, 8
+ EDITTEXT DLG_KEY, 47, 49, 71, 12, WS_BORDER | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 8, 70, 50, 14
+ PUSHBUTTON "CANCEL", IDC_CANCEL, 68, 70, 50, 14, WS_TABSTOP
+}
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
