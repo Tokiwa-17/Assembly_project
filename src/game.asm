@@ -14,12 +14,15 @@ includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
 
+include     audio.inc
 include 	game.inc
 include     config.inc
 include     level.inc
 
 extern hInstance:dword
-
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; data
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .data
 ;        ///// information /////
 globalJudgeLineY      dword   0
@@ -44,9 +47,15 @@ _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
 
+music_play      dword       1
+wDeviceID       dword       0
+settings        dword       0
+hEvent          dd          0
+
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
-
+CyaeghaAudio    db  "Cyaegha.wav", 0
+SheriruthAudio  db  "Sheriruth.wav", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -368,18 +377,27 @@ GameInit endp
 GameLevelReset      proc    uses esi eax ebx    levelIndex
     ret
 GameLevelReset      endp
-
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameUpdate
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameUpdate proc
 	local	@i
 	;pushad
 	;;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
-	;.if globalCurrentPage == INIT_PAGE
+	.if globalCurrentPage == INIT_PAGE
+        ;.if music_play        
+            ;invoke  AudioOpen, offset CyaeghaAudio
+            ;invoke  AudioPlay, eax
+            ;mov     music_play, 0
+            ;invoke  AudioOpen, offset SheriruthAudio
+            ;mov     wDeviceID, eax
+            ;invoke  AudioPlay, eax
 		;.if keys.key_return
 			;mov globalCurrentPage, SELECT_PAGE
 			;mov keys.key_return, 0
 		;.endif
 	;;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
-	;.elseif globalCurrentPage == SELECT_PAGE
+	.elseif globalCurrentPage == SELECT_PAGE
 		;.if keys.key_return
 			;mov globalCurrentPage, PLAY_PAGE
 			;mov keys.key_return, 0
@@ -388,12 +406,11 @@ GameUpdate proc
 			;mov keys.key_d, 0
 		;.endif
 ;
-	;.endif
+	.endif
 ;
 	;popad
 	ret
 GameUpdate endp
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -427,8 +444,18 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     local @index
     ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
     .if globalCurrentPage == INIT_PAGE
-        .if down
-            mov globalCurrentPage, SELECT_PAGE
+        .if keyCode == 'H'
+                mov eax, settings
+                cmp eax, 0
+                jnz GameUpdate_L1
+            mov settings, 1
+            invoke  GetModuleHandle, NULL
+            invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
+GameUpdate_L1:
+            ;invoke AudioStop, wDeviceID
+            ;invoke      AudioOpen, offset CyaeghaAudio
+            ;invoke      AudioPlay, eax
+        ;    mov globalCurrentPage, SELECT_PAGE
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
@@ -482,4 +509,51 @@ GameKeyCallback_L1:
     .endif
     ret
 GameKeyCallback     endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; _ProcDlgMain
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+_ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
+		local	@lpTranslated:byte, @bSigned:byte
+        local   @lpString[5]:byte 
+        mov	eax,wMsg
+        mov @bSigned, 0
+;********************************************************************
+		.if	eax ==	WM_COMMAND
+            mov	eax,wParam
+			.if	ax ==	IDOK
+                invoke GetDlgItemInt, hWnd, DLG_SPEED, addr @lpTranslated, @bSigned
+                mov globalSpeedLevel, eax
+                invoke GetDlgItemInt, hWnd, DLG_DELAY, addr @lpTranslated, @bSigned
+                mov globalJudgeDelay, eax
+                invoke GetDlgItemText, hWnd, DLG_KEY, addr @lpString, 5
+                mov esi, offset globalKeyMaps
+                mov ecx, GAME_KEY_COUNT
+_ProcDlgMain_L1:
+                mov edi, GAME_KEY_COUNT
+                sub edi, ecx
+                mov al, @lpString[edi]
+                mov byte ptr [esi], al
+                inc esi
+                loop _ProcDlgMain_L1
+                invoke	CloseHandle, hEvent
+			    invoke	EndDialog, hWnd, NULL
+            .elseif	ax ==	IDC_CANCEL
+                invoke CloseHandle, hEvent
+                invoke EndDialog, hWnd, NULL
+            .endif
+;********************************************************************
+		.elseif	eax ==	WM_CLOSE
+			invoke	CloseHandle, hEvent
+			invoke	EndDialog, hWnd, NULL
+;********************************************************************
+		.elseif	eax ==	WM_INITDIALOG
+;********************************************************************
+		.else
+            mov	eax,FALSE
+			ret
+        .endif
+        mov eax, TRUE
+		ret
+
+_ProcDlgMain	endp
 end

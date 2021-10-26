@@ -17,7 +17,6 @@ includelib	winmm.lib
 include 	level.inc
 include		game.inc
 include		config.inc
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 数据段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -61,6 +60,7 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 			;Set Timer
 			invoke	SetTimer, hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
 ;********************************************************************
+
 		.elseif eax == WM_KEYDOWN
 			mov eax, wParam
 			mov @key, al

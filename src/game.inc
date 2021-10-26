@@ -48,4 +48,5 @@ GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 NoteTapJudgement                PROTO,      index:dword
 GameLevelReset                  PROTO,      levelIndex:dword
+_ProcDlgMain	                PROTO	    hWnd:dword, wMsg:dword, wParam:dword, lParam:dword
 endif

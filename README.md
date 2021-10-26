@@ -62,3 +62,20 @@ VSCode CMake-Tools
 - [x] GameCalcNoteCenterY
 - [ ] 开始游戏后的处理，得分，音效
 
+
+
+10/26
+
+- [ ] settings speed(1-16) 、延迟先设成0、按键映射
+- [ ] gameLevelReset 、gameLevelEnd、score
+- [ ] levelLoad
+- [ ] UI
+- [ ] 音效
+- [ ] 选歌
+
+
+
+10/27
+
+
+
