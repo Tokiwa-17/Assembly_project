@@ -487,13 +487,13 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
     .if globalCurrentPage == INIT_PAGE
         .if keyCode == 'H'
-                mov eax, settings
-                cmp eax, 0
-                jnz GameUpdate_L1
+            mov eax, settings
+            cmp eax, 0
+            jnz GameKeyCallback_L1
             mov settings, 1
             invoke  GetModuleHandle, NULL
             invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
-GameUpdate_L1:
+GameKeyCallback_L1:
             ;invoke AudioStop, wDeviceID
             ;invoke      AudioOpen, offset CyaeghaAudio
             ;invoke      AudioPlay, eax
@@ -505,7 +505,7 @@ GameUpdate_L1:
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
         mov ecx, GAME_KEY_COUNT
-GameKeyCallback_L1:
+GameKeyCallback_L2:
         mov eax, ecx
         sub eax, 1
         mov @index, eax
@@ -544,7 +544,7 @@ GameKeyCallback_L1:
             .endif
             ret
         .endif
-        loop GameKeyCallback_L1
+        loop GameKeyCallback_L2
     .endif
     ret
 GameKeyCallback     endp
