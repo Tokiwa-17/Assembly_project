@@ -28,11 +28,11 @@ judgement       dword   0
 LevelNoteRecord        ends
 
 LevelRecord            struct
-records         dword   GAME_KEY_COUNT      DUP(0)
 ;record indices within level
 currentIndices  dword   GAME_KEY_COUNT      DUP(0)
 tapJudgesCount  dword   NOTE_JUDGE_COUNT    DUP(0)
 catchJudgeCount dword   2                   DUP(0)
+records         dword   GAME_KEY_COUNT * MAX_NOTE_LENGTH      DUP(0)
 LevelRecord            ends
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -90,33 +90,24 @@ NoteTapJudgement_beginWhile:
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   LevelNote *note = &(sGame.pCurLevel)->notes[index][curIndex]
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   globalPCurLevel -> notes[index]
     mov esi, globalPCurLevel
     add esi, sizeof Level
-    sub esi, 16
-;   (sGame.pCurLevel)->notes[index]
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-;   notes[index][curIndex]
-    mov eax, [esi]
-    mov esi, eax
-    mov ecx, @curIndex
-    shl ecx, 3; sizeof LevelNote = 8
-    add esi, ecx
+;   (globalPCurLevel)->notes[index][curIndex]
+    mov eax, GAME_KEY_COUNT
+    sub eax, index
+    mov ecx, MAX_NOTE_LENGTH
+    mul ecx
+    add eax, @curIndex
+    mov ecx, sizeof LevelNote
+    mul ecx
+    sub esi, eax
     mov @note, esi
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   LevelNoteRecord *record = &((sGame.levelRecord).records[index][curIndex])
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, offset globalLevelRecord.records
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-    mov eax, [esi]
-    mov esi, eax
-    mov ecx, @curIndex
-    shl ecx, 3; sizeof LevelNoteRecord = 8
-    add esi, ecx
+    mov esi, offset globalLevelRecord
+    add esi, sizeof LevelRecord
+    sub esi, eax
     mov @record, esi
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;  (note->type == NOTE_CATCH)
@@ -134,7 +125,7 @@ NoteTapJudgement_beginWhile:
     mov esi, @judgeTime
     .IF esi > eax
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   Time diff = record->judgeTime - note->time;
+;   Time diff = judgeTime - note->time;
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     mov eax, @judgeTime
     mov esi, @note
@@ -248,33 +239,24 @@ NoteCatchJudgement_beginWhile:
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   LevelNote *note = &(sGame.pCurLevel)->notes[index][curIndex]
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   globalPCurLevel -> notes[index]
     mov esi, globalPCurLevel
     add esi, sizeof Level
-    sub esi, 16
-; (sGame.pCurLevel)->notes[index]
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-;   notes[index][curIndex]
-    mov eax, [esi]
-    mov esi, eax
-    mov ecx, @curIndex
-    shl ecx, 3; sizeof LevelNote = 8
-    add esi, ecx
+;   (globalPCurLevel)->notes[index][curIndex]
+    mov eax, GAME_KEY_COUNT
+    sub eax, index
+    mov ecx, MAX_NOTE_LENGTH
+    mul ecx
+    add eax, @curIndex
+    mov ecx, sizeof LevelNote
+    mul ecx
+    sub esi, eax
     mov @note, esi
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   LevelNoteRecord *record = &sGame.levelRecord.records[index][curIndex]
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, offset globalLevelRecord.records
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-    mov eax, [esi]
-    mov esi, eax
-    mov ecx, @curIndex
-    shl ecx, 3; sizeof LevelNoteRecord = 8
-    add esi, ecx
+    mov esi, offset globalLevelRecord
+    add esi, sizeof LevelRecord
+    sub esi, eax
     mov @record, esi
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;  (note->type == NOTE_TAP)
