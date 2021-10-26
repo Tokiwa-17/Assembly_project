@@ -14,18 +14,17 @@ includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
 
-;include		resource.inc
-;include 	level.inc
-;include		game.inc
-;include		config.inc
+include 	level.inc
+include		game.inc
+include		config.inc
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 数据段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 public hInstance, hMainWin
 .data?
-hInstance	dd		?
-hMainWin	dd		?
+hInstance	dword		?
+hMainWin	dword		?
 .const
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
@@ -58,9 +57,9 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 ;		sent when a window be created by calling the CreateWindowEx 
 ;		or CreateWindow function.
 		.elseif eax == WM_CREATE
-			invoke GameInit, _hWnd
+			invoke GameInit
 			;Set Timer
-			invoke	SetTimer, _hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
+			invoke	SetTimer, hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
 ;********************************************************************
 		.elseif eax == WM_KEYDOWN
 			mov eax, wParam
@@ -175,8 +174,8 @@ _OnPaint	proc	_hWnd, _hDC
 		invoke	SelectObject, @bufferDC, @hOldObject
 		invoke	DeleteObject,@bufferBmp
 		invoke	DeleteObject,@bufferDC
-		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
-			@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
+		;invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
+			;@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		popad
 		ret
 _OnPaint endp

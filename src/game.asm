@@ -14,10 +14,11 @@ includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
 
-include		resource.inc
 include 	game.inc
 include     config.inc
 include     level.inc
+
+extern hInstance:dword
 
 .data
 ;        ///// information /////
@@ -269,7 +270,6 @@ NoteCatchJudgement_beginWhile:
     mov ecx, index
     shl ecx, 2
     add esi, ecx
-    loop L5
     mov eax, [esi]
     mov esi, eax
     mov ecx, @curIndex
@@ -371,26 +371,26 @@ GameLevelReset      endp
 
 GameUpdate proc
 	local	@i
-	pushad
-	;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
-	.if globalCurrentPage == INIT_PAGE
-		.if keys.key_return
-			mov globalCurrentPage, SELECT_PAGE
-			mov keys.key_return, 0
-		.endif
-	;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
-	.elseif globalCurrentPage == SELECT_PAGE
-		.if keys.key_return
-			mov globalCurrentPage, PLAY_PAGE
-			mov keys.key_return, 0
-		.elseif keys.key_d
-			invoke _readFile,  offset Cyaegha, offset cyaephaOpern
-			mov keys.key_d, 0
-		.endif
-
-	.endif
-
-	popad
+	;pushad
+	;;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
+	;.if globalCurrentPage == INIT_PAGE
+		;.if keys.key_return
+			;mov globalCurrentPage, SELECT_PAGE
+			;mov keys.key_return, 0
+		;.endif
+	;;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
+	;.elseif globalCurrentPage == SELECT_PAGE
+		;.if keys.key_return
+			;mov globalCurrentPage, PLAY_PAGE
+			;mov keys.key_return, 0
+		;.elseif keys.key_d
+			;invoke _readFile,  offset Cyaegha, offset cyaephaOpern
+			;mov keys.key_d, 0
+		;.endif
+;
+	;.endif
+;
+	;popad
 	ret
 GameUpdate endp
 
@@ -416,8 +416,6 @@ GameDraw	proc _hDC
 
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
-		invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
-			@hDcBack, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		invoke SelectObject, @hDcBack, @hOldObject
 		invoke DeleteDC, @hDcBack
 		ret
@@ -434,10 +432,10 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
-        .if keyCode == 'F'
-            mov globalCurrentPage, PLAY_PAGE
-			invoke _readFile, offset Cyaegha, offset cyaephaOpern
-        .endif
+        ;.if keyCode == 'F'
+            ;mov globalCurrentPage, PLAY_PAGE
+			;invoke _readFile, offset Cyaegha, offset cyaephaOpern
+        ;.endif
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
         mov ecx, GAME_KEY_COUNT
@@ -456,18 +454,19 @@ GameKeyCallback_L1:
                 mov eax, @index
                 add esi, eax
                 mov byte ptr [esi], 1
-                ; if (!previousDown)
                 mov al, previousDown
-                cmp al, 0
-                jne GameKeyCallback_L3
-                mov esi, offset globalKeyPressTime
-                mov eax, @index
-                shl eax, 2; sizeof dword = 4
-                add esi, eax
-                invoke timeGetTime
-                sub eax, globalLevelBeginTime
-                mov [esi], eax
-                invoke NoteTapJudgement, @index
+                .if al == 0; if (!previousDown)
+                    mov esi, offset globalKeyPressTime
+                    mov eax, @index
+                    shl eax, 2; sizeof dword = 4
+                    add esi, eax
+                    push esi
+                    invoke timeGetTime
+                    sub eax, globalLevelBeginTime
+                    pop esi
+                    mov [esi], eax
+                    invoke NoteTapJudgement, @index
+                .endif
             .else
                 mov esi, offset globalKeyPressing
                 mov eax, @index

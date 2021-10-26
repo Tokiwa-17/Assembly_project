@@ -39,17 +39,14 @@ public:
         size_t offset = 0;
         for (size_t i = 0; i < GAME_KEY_COUNT; ++i)
         {
+            assert(notes[i].size() < GAME_MAX_NOTES);
             level.noteCounts[i] = uint32_t(notes[i].size());
-            level.notes[i] = (LevelNote *)offset;
-            offset += level.noteCounts[i] * sizeof(LevelNote);
         }
         std::string folder = "./levels/";
         if (!std::filesystem::exists(folder))
             std::filesystem::create_directory(folder);
         std::ofstream ofs(folder + level.musicName + ".level", std::ios::binary | std::ios::out);
         ofs.write(reinterpret_cast<char *>(&level), sizeof(Level));
-        for (size_t i = 0; i < GAME_KEY_COUNT; ++i)
-            ofs.write(reinterpret_cast<char *>(notes[i].data()), level.noteCounts[i] * sizeof(LevelNote));
     }
 
     LevelBuilder(const LevelBuilder &) = delete;

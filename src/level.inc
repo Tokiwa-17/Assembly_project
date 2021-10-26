@@ -43,7 +43,7 @@ totalTapCount   dword   0
 totalCatchCount dword   0
 totalNoteCount  dword   0
 noteCounts      dword   GAME_KEY_COUNT      DUP(0)
-; 指向LevelNote结构体的指针
+; 指向LevelNote结构体的指针, FIXME
 notes           dword   GAME_KEY_COUNT      DUP(0)
 Level       ends
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
