@@ -131,6 +131,7 @@ void NoteCatchJudgement(UINT index, Time currentTime)
             // handle in other place
             break;
         // is catch
+        // FIXME
         if (note->time > currentTime + NOTE_JUDGE_PERFECT_LIMIT)
             break; // too early
         if (note->time + NOTE_JUDGE_PERFECT_LIMIT >= sGame.keyPressTime[index])
