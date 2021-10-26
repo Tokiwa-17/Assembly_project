@@ -47,7 +47,7 @@ VSCode CMake-Tools
 - [x]  谱面一
 - [ ]  谱面二
 - [x]  读取文件
-- [ ]  判定逻辑
+- [x]  判定逻辑
 - [x] 音频读取  没交PR 测试？
 - [ ] 选歌页面
 - [ ] 绘制事件
@@ -66,7 +66,7 @@ VSCode CMake-Tools
 
 10/26
 
-- [ ] settings speed(1-16) 、延迟先设成0、按键映射
+- [x] settings speed(1-16) 、延迟先设成0、按键映射
 - [ ] gameLevelReset 、gameLevelEnd、score
 - [ ] levelLoad
 - [ ] UI

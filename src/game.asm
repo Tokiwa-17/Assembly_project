@@ -514,7 +514,7 @@ GameKeyCallback     endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
 		local	@lpTranslated:byte, @bSigned:byte
-        local   @lpString[5]:byte 
+        local   @lpString[2]:byte 
         mov	eax,wMsg
         mov @bSigned, 0
 ;********************************************************************
@@ -525,18 +525,24 @@ _ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
                 mov globalSpeedLevel, eax
                 invoke GetDlgItemInt, hWnd, DLG_DELAY, addr @lpTranslated, @bSigned
                 mov globalJudgeDelay, eax
-                invoke GetDlgItemText, hWnd, DLG_KEY, addr @lpString, 5
+                invoke GetDlgItemText, hWnd, DLG_KEY1, addr @lpString, 2
                 mov esi, offset globalKeyMaps
-                mov ecx, GAME_KEY_COUNT
-_ProcDlgMain_L1:
-                mov edi, GAME_KEY_COUNT
-                sub edi, ecx
-                mov al, @lpString[edi]
+                mov al, @lpString[0]
                 mov byte ptr [esi], al
                 inc esi
-                loop _ProcDlgMain_L1
-                invoke	CloseHandle, hEvent
-			    invoke	EndDialog, hWnd, NULL
+                invoke GetDlgItemText, hWnd, DLG_KEY2, addr @lpString, 2
+                mov al, @lpString[0]
+                mov byte ptr [esi], al
+                inc esi
+                invoke GetDlgItemText, hWnd, DLG_KEY3, addr @lpString, 2
+                mov al, @lpString[0]
+                mov byte ptr [esi], al
+                inc esi
+                invoke GetDlgItemText, hWnd, DLG_KEY4, addr @lpString, 2
+                mov al, @lpString[0]
+                mov byte ptr [esi], al
+                invoke CloseHandle, hEvent
+                invoke EndDialog, hWnd, NULL
             .elseif	ax ==	IDC_CANCEL
                 invoke CloseHandle, hEvent
                 invoke EndDialog, hWnd, NULL
