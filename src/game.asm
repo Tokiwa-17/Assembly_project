@@ -13,16 +13,20 @@ include		kernel32.inc
 includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
+includelib msvcrt.lib
 
 include     audio.inc
 include 	game.inc
+include     audio.inc
 include     config.inc
 include     level.inc
 
 extern hInstance:dword
+extern hMainWin:dword
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; data
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 .data
 ;        ///// information /////
 globalJudgeLineY      dword   0
@@ -38,6 +42,8 @@ globalCurrentPage     dword   100
 globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
 globalLevelState      dword   0
+globalCurLevelMusicID dword   0
+globalLevelResetTime  dword   0
 globalLevelBeginTime  dword   0
 globalLevelRecord     LevelRecord       <>  
 globalKeyPressing     db      GAME_KEY_COUNT      DUP(0)
@@ -60,6 +66,8 @@ SheriruthAudio  db  "Sheriruth.wav", 0
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
+memset proto C :ptr byte, :dword, :dword
+
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteTapJudgement
@@ -342,6 +350,34 @@ GameCalcNoteCenterY_L3:
     ret
 GameCalcNoteCenterY      endp
 
+GameLevelCalcScore proc uses ebx edx esi
+    mov esi, offset globalLevelRecord.tapJudgesCount
+    mov edx, [esi]
+    add edx, [esi + 4]
+    add edx, [esi + 8]
+    shl edx, 1
+    mov eax, edx
+    mov edx, [esi + 12]
+    add edx, [esi + 16]
+    mov esi, offset globalLevelRecord.catchJudgeCount
+    add edx, [esi]
+    add eax, edx
+    mov edx, 1000000
+    mul edx
+
+    mov esi, globalPCurLevel
+    mov edx, (Level ptr [esi]).totalTapCount
+    shl edx, 1
+    mov ebx, edx
+    mov edx, (Level ptr [esi]).totalCatchCount
+    add ebx, edx
+
+    div ebx
+    mov esi, offset globalLevelRecord.tapJudgesCount
+    add eax, [esi]
+    ret
+GameLevelCalcScore endp
+
 GameInit proc
 ;		Load Bitmap
 		invoke	LoadBitmap, hInstance, INIT_PAGE
@@ -356,41 +392,65 @@ GameInit endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameLevelReset
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameLevelReset      proc    uses esi eax ebx    levelIndex
+GameLevelReset proc uses eax ecx edi, levelIndex
+    mov eax, levelIndex
+    mov globalCurrentLevelID, eax
+    ; TODO: sGame.pCurLevel = &sGame.levels[levelIndex];
+
+    invoke memset, offset globalLevelRecord, 0, type LevelRecord
+    mov ecx, GAME_KEY_COUNT
+    mov edi, offset globalKeyPressing
+GameLevelReset_L1:
+    mov dword ptr [edi], FALSE
+    add edi, 4
+    loop GameLevelReset_L1
+
+    mov globalLevelState, GAME_LEVEL_RESET
+    invoke timeGetTime
+    mov globalLevelResetTime, eax
+
+    mov esi, globalPCurLevel
+    invoke AudioOpen, addr (Level ptr [esi]).musicPath
+    mov globalCurLevelMusicID, eax
     ret
 GameLevelReset      endp
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; GameUpdate
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameUpdate proc
-	local	@i
-	;pushad
-	;;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
-	.if globalCurrentPage == INIT_PAGE
-        ;.if music_play        
-            ;invoke  AudioOpen, offset CyaeghaAudio
-            ;invoke  AudioPlay, eax
-            ;mov     music_play, 0
-            ;invoke  AudioOpen, offset SheriruthAudio
-            ;mov     wDeviceID, eax
-            ;invoke  AudioPlay, eax
-		;.if keys.key_return
-			;mov globalCurrentPage, SELECT_PAGE
-			;mov keys.key_return, 0
-		;.endif
-	;;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
-	.elseif globalCurrentPage == SELECT_PAGE
-		;.if keys.key_return
-			;mov globalCurrentPage, PLAY_PAGE
-			;mov keys.key_return, 0
-		;.elseif keys.key_d
-			;invoke _readFile,  offset Cyaegha, offset cyaephaOpern
-			;mov keys.key_d, 0
-		;.endif
-;
+
+GameUpdate proc uses eax ecx edx esi
+	local	@currentTime
+    .if globalCurrentPage == PLAY_PAGE
+        .if globalLevelState == GAME_LEVEL_RESET
+            invoke timeGetTime
+            mov edx, globalLevelResetTime
+            sub eax, edx
+            mov edx, GAME_LEVEL_WAIT_TIME
+            .if eax >= edx
+                invoke AudioOpen, globalCurLevelMusicID
+                invoke timeGetTime
+                mov globalLevelBeginTime, eax
+                mov globalLevelState, GAME_LEVEL_PLAYING
+            .endif
+        .elseif globalLevelState == GAME_LEVEL_PLAYING
+            invoke timeGetTime
+            mov edx, globalLevelBeginTime
+            sub eax, edx
+            mov @currentTime, eax
+            mov ecx, GAME_KEY_COUNT
+GameUpdate_L1:
+            mov eax, GAME_KEY_COUNT
+            sub eax, ecx
+            mov edx, eax
+            shl eax, 2
+            mov esi, offset globalKeyPressing
+            add esi, eax
+            mov eax, [esi]
+            .if al > 0
+                invoke NoteCatchJudgement, edx, @currentTime
+            .endif
+            loop GameUpdate_L1
+
+            ; TODO: other play logic
+        .endif
 	.endif
-;
-	;popad
 	ret
 GameUpdate endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -427,13 +487,13 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
     .if globalCurrentPage == INIT_PAGE
         .if keyCode == 'H'
-                mov eax, settings
-                cmp eax, 0
-                jnz GameUpdate_L1
+            mov eax, settings
+            cmp eax, 0
+            jnz GameKeyCallback_L1
             mov settings, 1
             invoke  GetModuleHandle, NULL
             invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
-GameUpdate_L1:
+GameKeyCallback_L1:
             ;invoke AudioStop, wDeviceID
             ;invoke      AudioOpen, offset CyaeghaAudio
             ;invoke      AudioPlay, eax
@@ -441,14 +501,11 @@ GameUpdate_L1:
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
-        ;.if keyCode == 'F'
-            ;mov globalCurrentPage, PLAY_PAGE
-			;invoke _readFile, offset Cyaegha, offset cyaephaOpern
-        ;.endif
+        ; TODO
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
         mov ecx, GAME_KEY_COUNT
-GameKeyCallback_L1:
+GameKeyCallback_L2:
         mov eax, ecx
         sub eax, 1
         mov @index, eax
@@ -487,7 +544,7 @@ GameKeyCallback_L1:
             .endif
             ret
         .endif
-        loop GameKeyCallback_L1
+        loop GameKeyCallback_L2
     .endif
     ret
 GameKeyCallback     endp
