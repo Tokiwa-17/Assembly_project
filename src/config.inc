@@ -25,5 +25,27 @@ DLG_DELAY   equ 10003
 DLG_KEY1    equ 10004
 DLG_KEY2    equ 10005
 DLG_KEY3    equ 10006
-DLG_KEY4    equ 10007 
+DLG_KEY4    equ 10007
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; SELECT_PAGE
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+MUSIC1_X1    equ     560
+MUSIC1_Y1    equ     340
+MUSIC1_X2    equ     720
+MUSIC1_Y2    equ     380
+MUSIC2_X1    equ     560
+MUSIC2_Y1    equ     460
+MUSIC2_X2    equ     720
+MUSIC2_Y2    equ     500
+MUSIC3_X1    equ     560
+MUSIC3_Y1    equ     580
+MUSIC3_X2    equ     720
+MUSIC3_Y2    equ     620
+TEXTOUT1_X   equ     610
+TEXTOUT1_Y   equ     350
+TEXTOUT2_X   equ     610
+TEXTOUT2_Y   equ     470
+TEXTOUT3_X   equ     610
+TEXTOUT3_Y   equ     590
+QUEUE_LENGTH equ     3
 endif
