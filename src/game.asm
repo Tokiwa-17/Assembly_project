@@ -13,7 +13,8 @@ include		kernel32.inc
 includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
-includelib msvcrt.lib
+includelib  msvcrt.lib
+;include     Irvine32.inc
 
 include     audio.inc
 include 	game.inc
@@ -60,8 +61,8 @@ hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
 
 .const
-Cyaegha db  "levels\Cyaegha.level", 0
-Sheriruth db  "levels\Sheriruth.level", 0
+Cyaegha         db  "levels\Cyaegha.level", 0
+Sheriruth       db  "levels\Sheriruth.level", 0
 musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
@@ -488,6 +489,20 @@ GameUpdate endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Str_length  proc uses esi ebx, address:dword
+    mov eax, 0
+    mov esi, address
+    .while  TRUE
+        mov bl, byte ptr [esi]
+        .break  .if bl == 0
+        inc eax
+        inc esi
+    .endw
+    ret
+Str_length  endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameDraw
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameDraw	proc uses esi, _hDC
 		local @hDcBack
 		local @hOldObject
@@ -519,9 +534,12 @@ GameDraw	proc uses esi, _hDC
             invoke Rectangle, _hDC, MUSIC2_X1, MUSIC2_Y1, MUSIC2_X2, MUSIC2_Y2
             invoke Rectangle, _hDC, MUSIC3_X1, MUSIC3_Y1, MUSIC3_X2, MUSIC3_Y2
             mov esi, offset musicNameList
-            invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], 7
-            invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], 9
-            invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], 4
+            invoke Str_length, [esi]
+            invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], eax
+            invoke Str_length, [esi + 4]
+            invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], eax
+            invoke Str_length, [esi + 8]
+            invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
         .elseif globalCurrentPage == PLAY_PAGE
 
         .endif
@@ -649,6 +667,57 @@ _ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
         .endif
         mov eax, TRUE
 		ret
-
 _ProcDlgMain	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; changeQueue
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+changeQueue     proc	uses ebx edi esi ecx, degree:sword
+        .if globalCurrentPage != SELECT_PAGE
+            ret
+        .endif
+        mov esi, offset musicNameList
+        mov ecx, QUEUE_LENGTH
+        dec ecx
+        .if degree == 120
+        mov esi, offset musicNameList
+        mov eax, type dword
+        mul ecx
+        add esi, eax
+        mov edi, [esi]
+changeQueue_L1:
+        mov esi, offset musicNameList
+        mov ebx, ecx
+        dec ebx
+        mov eax, type dword
+        mul ebx
+        add esi, eax
+        mov ebx, [esi]
+        add esi, type dword
+        mov [esi], ebx
+        loop changeQueue_L1
+        mov esi, offset musicNameList
+        mov [esi], edi
+        .elseif degree == -120
+        mov esi, offset musicNameList
+        mov edi, [esi]
+changeQueue_L2:
+        mov esi, offset musicNameList
+        mov ebx, QUEUE_LENGTH
+        sub ebx, ecx
+        mov eax, type dword
+        mul ebx
+        add esi, eax
+        mov eax, [esi]
+        sub esi, type dword
+        mov [esi], eax
+        loop changeQueue_L2
+        mov esi, offset musicNameList
+        mov eax, type dword
+        mov ebx, QUEUE_LENGTH - 1
+        mul ebx
+        add esi, eax
+        mov [esi], edi        
+        .endif
+        ret
+changeQueue     endp
 end
