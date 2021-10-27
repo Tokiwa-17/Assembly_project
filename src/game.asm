@@ -57,10 +57,14 @@ music_play      dword       1
 wDeviceID       dword       0
 settings        dword       0
 hEvent          dd          0
+musicNameList   dd          QUEUE_LENGTH        DUP(0)
 
 .const
 Cyaegha db  "levels\Cyaegha.level", 0
 Sheriruth db  "levels\Sheriruth.level", 0
+musicName1      db  "Cyaegha", 0
+musicName2      db  "Sheriruth", 0
+musicName3      db  "TODO", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -394,6 +398,11 @@ GameInit proc
     mov edi, globalLevels
     add edi, type Level
     invoke LevelLoad, offset Sheriruth, edi
+    
+    mov     esi,    offset  musicNameList
+    mov     [esi],  offset  musicName1
+    mov     [esi+4],offset  musicName2
+    mov     [esi+8],offset  musicName3
 	ret
 GameInit endp
 
@@ -479,7 +488,7 @@ GameUpdate endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameDraw	proc _hDC
+GameDraw	proc uses esi, _hDC
 		local @hDcBack
 		local @hOldObject
 		; DC for background 
@@ -500,6 +509,22 @@ GameDraw	proc _hDC
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
 		invoke SelectObject, @hDcBack, @hOldObject
 		invoke DeleteDC, @hDcBack
+;       draw other stuff
+        .if globalCurrentPage == INIT_PAGE
+
+        .elseif globalCurrentPage == SELECT_PAGE
+            invoke CreatePen, PS_SOLID, 4, WHITE_PEN
+            ;mov hPen, eax 
+            invoke Rectangle, _hDC, MUSIC1_X1, MUSIC1_Y1, MUSIC1_X2, MUSIC1_Y2
+            invoke Rectangle, _hDC, MUSIC2_X1, MUSIC2_Y1, MUSIC2_X2, MUSIC2_Y2
+            invoke Rectangle, _hDC, MUSIC3_X1, MUSIC3_Y1, MUSIC3_X2, MUSIC3_Y2
+            mov esi, offset musicNameList
+            invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], 7
+            invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], 9
+            invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], 4
+        .elseif globalCurrentPage == PLAY_PAGE
+
+        .endif
 		ret
 GameDraw	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -517,6 +542,8 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
             invoke  GetModuleHandle, NULL
             invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
 GameKeyCallback_L1:
+        .elseif keyCode == 'J'
+            mov globalCurrentPage, SELECT_PAGE
             ;invoke AudioStop, wDeviceID
             ;invoke      AudioOpen, offset CyaeghaAudio
             ;invoke      AudioPlay, eax

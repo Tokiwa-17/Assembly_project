@@ -24,6 +24,8 @@ public hInstance, hMainWin
 .data?
 hInstance	dword		?
 hMainWin	dword		?
+.data
+rotateDistance  sword       0
 .const
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
@@ -83,6 +85,11 @@ PreviousDownFlag:
 ;********************************************************************
 		.elseif eax == WM_TIMER
 			invoke _ProcessTimer, hWnd, wParam
+;********************************************************************
+		.elseif eax == WM_MOUSEWHEEL
+			;.if globalCurrentPage == SELECT_PAGE
+
+			;.endif
 ;********************************************************************
 		.elseif	eax ==	WM_CLOSE
 			invoke	KillTimer, hWnd, ID_TIMER
