@@ -13,6 +13,8 @@ struct LevelBuilderInfo
 {
     std::string_view name;
     std::string_view author;
+    std::string_view musicPath;
+    std::string_view imagePath;
     LevelDifficulty difficulty;
     Time offset;
 };
@@ -27,6 +29,10 @@ public:
         level.musicName[info.name.size()] = '\0';
         memcpy_s(level.author, MAX_NAME_LENGTH - 1, info.author.data(), info.author.size());
         level.author[info.author.size()] = '\0';
+        memcpy_s(level.musicPath, MAX_NAME_LENGTH - 1, info.musicPath.data(), info.musicPath.size());
+        level.musicPath[info.musicPath.size()] = '\0';
+        memcpy_s(level.imagePath, MAX_NAME_LENGTH - 1, info.imagePath.data(), info.imagePath.size());
+        level.imagePath[info.imagePath.size()] = '\0';
         level.difficulty = info.difficulty;
 
         currentBPM = initBPM;

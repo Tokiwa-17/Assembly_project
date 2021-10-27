@@ -86,7 +86,6 @@ PreviousDownFlag:
 ;********************************************************************
 		.elseif	eax ==	WM_CLOSE
 			invoke	KillTimer, hWnd, ID_TIMER
-			invoke	DestroyWindow, hMainWin
 			invoke	PostQuitMessage, NULL
 ;********************************************************************
 		.else
@@ -142,6 +141,8 @@ _WinMain	proc
 			invoke	TranslateMessage, addr @stMsg
 			invoke	DispatchMessage, addr @stMsg
 		.endw
+		invoke  GameShutdown
+		invoke	DestroyWindow, hMainWin
 		ret
 
 _WinMain	endp
