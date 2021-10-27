@@ -1,7 +1,7 @@
 /**
  * @file sheriruth.cpp
  * @author Qi Shijie (shijieqi1@outlook.com)
- * @brief Sheriruth by Team Grimoire, from Arcaea@???
+ * @brief Sheriruth by Team Grimoire, from Arcaea@lowiro
  * @version 0.1
  * @date 2021-10-25
  * 
@@ -21,10 +21,10 @@ int main()
     LevelBuilderInfo info;
     info.name = "Sheriruth";
     info.author = "Team Grimoire";
-    info.difficulty = DIFFICULTY_NORMAL;
+    info.difficulty = DIFFICULTY_EXPERT;
     info.offset = 0; // TODO
 
-    auto lb = LevelBuilder(info, 200.0f);
+    auto lb = LevelBuilder(info, 185.0f);
     // 1 = 4/4
 sec_1:
     rep(4) lb.AddTime(4);
