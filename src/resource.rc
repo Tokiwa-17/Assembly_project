@@ -6,9 +6,15 @@
 #define INIT_PAGE       100
 #define SELECT_PAGE     101
 #define PLAY_PAGE       102
+#define BUTTON          103
+#define MUSIC_SELECT_0  104
+#define MUSIC_SELECT_1  105
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ICO_GAME	ICON		"Game.ico"
 INIT_PAGE   BITMAP      "init_bg.bmp"
 SELECT_PAGE BITMAP      "select_music.bmp"
 PLAY_PAGE   BITMAP      "play.bmp"
+BUTTON      BITMAP      "button_all_songs.bmp"
+MUSIC_SELECT_0   BITMAP "Cyaegha_select.bmp"
+MUSIC_SELECT_1   BITMAP "Sheriruth_select.bmp"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -14,6 +14,9 @@ ICO_GAME		equ		1000
 INIT_PAGE		equ		100
 SELECT_PAGE 	equ		101
 PLAY_PAGE		equ		102
+BUTTON          equ     103
+MUSIC_SELECT_0   equ    104
+MUSIC_SELECT_1   equ    105
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -41,11 +44,16 @@ MUSIC3_X1    equ     560
 MUSIC3_Y1    equ     580
 MUSIC3_X2    equ     720
 MUSIC3_Y2    equ     620
-TEXTOUT1_X   equ     610
-TEXTOUT1_Y   equ     350
-TEXTOUT2_X   equ     610
-TEXTOUT2_Y   equ     470
-TEXTOUT3_X   equ     610
-TEXTOUT3_Y   equ     590
+TEXTOUT1_X   equ     1122
+TEXTOUT1_Y   equ     339
+TEXTOUT2_X   equ     1051
+TEXTOUT2_Y   equ     474
+TEXTOUT3_X   equ     1122
+TEXTOUT3_Y   equ     609
 QUEUE_LENGTH equ     3
+SELECT_COVER_X  equ  187
+SELECT_COVER_Y  equ  193
+SELECT_COVER_WIDTH   equ    512
+SELECT_COVER_HEIGHT  equ    512
+
 endif

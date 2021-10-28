@@ -77,5 +77,28 @@ VSCode CMake-Tools
 
 10/27
 
+- [x] levelLoad修改	          涂轶杰
+- [x] 选歌页面响应鼠标滑轮  贠龙飞
+- [x] UI设计实现                   齐仕杰 + 范容彰
 
 
+
+10/28
+
+- [x] 游戏界面设计				齐仕杰、范容彰
+- [x] 选歌页面设计	            齐仕杰、范容彰
+- [ ] 结算页面设计                齐仕杰、范容彰
+- [ ] 开始页面设计                齐仕杰、范容彰 
+- [ ] GameDrawNotes        涂轶杰
+
+- [ ] 设置、选歌页面更新     贠龙飞 
+
+  globalCurrentLevelID +1 2
+
+  globalLevelCount 2
+
+- [ ] 
+
+* Cyaegha
+* Sheriruth
+* TODO
