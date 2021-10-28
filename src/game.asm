@@ -18,7 +18,7 @@ includelib  msvcrt.lib
 
 include     audio.inc
 include 	game.inc
-include     audio.inc
+include     animation.inc
 include     config.inc
 include     level.inc
 
@@ -54,8 +54,11 @@ _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
 
-music_play      dword       1
-wDeviceID       dword       0
+bmpTapEffect    dword       ?
+bmpCatchEffect  dword       ?
+animTapEffect   AnimationClip <>
+animCatchEffect AnimationClip <>
+
 settings        dword       0
 hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
@@ -389,6 +392,13 @@ GameInit proc
 	invoke	LoadBitmap, hInstance, PLAY_PAGE
 	mov		_bg3, 	eax
 
+    invoke LoadBitmap, hInstance, TAP_EFFECT
+    mov bmpTapEffect, eax
+    invoke AnimationInit, bmpTapEffect, 4, 4, offset animTapEffect
+    invoke LoadBitmap, hInstance, CATCH_EFFECT
+    mov bmpCatchEffect, eax
+    invoke AnimationInit, bmpCatchEffect, 4, 4, offset animCatchEffect
+
     invoke GetProcessHeap
     mov @hHeap, eax
     invoke HeapAlloc, @hHeap, 0, 4 * type Level
@@ -541,10 +551,19 @@ GameDraw	proc uses esi, _hDC
             invoke Str_length, [esi + 8]
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
         .elseif globalCurrentPage == PLAY_PAGE
-
+            .if globalLevelState == GAME_LEVEL_PLAYING
+                invoke GameDrawNotes, _hDC
+            .endif
         .endif
 		ret
 GameDraw	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameDrawNotes
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+GameDrawNotes proc hDC: dword
+    ; TODO
+    ret
+GameDrawNotes endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameKeyCallback
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -554,18 +573,13 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     .if globalCurrentPage == INIT_PAGE
         .if keyCode == 'H'
             mov eax, settings
-            cmp eax, 0
-            jnz GameKeyCallback_L1
-            mov settings, 1
-            invoke  GetModuleHandle, NULL
-            invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
-GameKeyCallback_L1:
+            .if eax == 0
+                mov settings, 1
+                invoke  GetModuleHandle, NULL
+                invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
+            .endif
         .elseif keyCode == 'J'
             mov globalCurrentPage, SELECT_PAGE
-            ;invoke AudioStop, wDeviceID
-            ;invoke      AudioOpen, offset CyaeghaAudio
-            ;invoke      AudioPlay, eax
-        ;    mov globalCurrentPage, SELECT_PAGE
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE

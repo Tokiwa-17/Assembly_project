@@ -1,12 +1,13 @@
 set(MUG_HEADERS
-    resource.inc
     audio.inc
+    animation.inc
     level.inc
     game.inc
 )
 
 set(MUG_SOURCES
     audio.asm
+    animation.asm
     level.asm
     game.asm
     main.asm

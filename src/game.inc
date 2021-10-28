@@ -8,13 +8,11 @@ include     windows.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GAME_LEVEL_WAIT_TIME     equ     1000
-ID_TIMER_LEVEL_BEGIN    equ     10
-
 GAME_PAGE_HOME          equ     0
 GAME_PAGE_CHOOSE        equ     1
 GAME_PAGE_SETTING       equ     2
 GAME_PAGE_PLAYING       equ     3
+GAME_PAGE_RESULT        equ     4
 
 GAME_LEVEL_RESET        equ     0
 GAME_LEVEL_PLAYING      equ     1
@@ -50,6 +48,7 @@ GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 NoteTapJudgement                PROTO,      index:dword
 GameLevelReset                  PROTO,      levelIndex:dword
+GameDrawNotes                   PROTO,      hDC:dword
 _ProcDlgMain	                PROTO	    hWnd:dword, wMsg:dword, wParam:dword, lParam:dword
 changeQueue                     PROTO,      degree:sword
 endif

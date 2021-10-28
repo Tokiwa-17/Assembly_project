@@ -12,8 +12,8 @@ DIFFICULTY_NORMAL       equ     1
 DIFFICULTY_HARD         equ     2
 DIFFICULTY_EXPERT       equ     3
 
-NOTE_TAP                equ     0
-NOTE_CATCH              equ     1
+NOTE_TAP                equ     111
+NOTE_CATCH              equ     45
 
 NOTE_JUDGE_CRITICAL_PERFECT     equ     0
 NOTE_JUDGE_PERFECT_EARLY        equ     1
