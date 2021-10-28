@@ -6,9 +6,15 @@
 #define INIT_PAGE       100
 #define SELECT_PAGE     101
 #define PLAY_PAGE       102
+
+#define TAP_EFFECT      200
+#define CATCH_EFFECT    201
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ICO_GAME	ICON		"Game.ico"
 INIT_PAGE   BITMAP      "init_bg.bmp"
 SELECT_PAGE BITMAP      "select_music.bmp"
 PLAY_PAGE   BITMAP      "play.bmp"
+
+TAP_EFFECT    BITMAP      "tap_effect.bmp"
+CATCH_EFFECT  BITMAP      "catch_effect.bmp"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

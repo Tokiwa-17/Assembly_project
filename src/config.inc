@@ -6,6 +6,7 @@ WINDOW_HEIGHT 			equ 	960
 WINDOW_WIDTH  			equ		1280
 ID_TIMER				equ		1
 TIMER_MAIN_INTERVAL		equ		16
+GAME_LEVEL_WAIT_TIME     equ     1000
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
 ICO_GAME		equ		1000
@@ -14,6 +15,9 @@ ICO_GAME		equ		1000
 INIT_PAGE		equ		100
 SELECT_PAGE 	equ		101
 PLAY_PAGE		equ		102
+
+TAP_EFFECT      equ     200
+CATCH_EFFECT    equ     201
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
