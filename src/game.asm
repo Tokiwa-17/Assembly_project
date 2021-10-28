@@ -13,7 +13,8 @@ include		kernel32.inc
 includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
-includelib msvcrt.lib
+includelib  msvcrt.lib
+;include     Irvine32.inc
 
 include     audio.inc
 include 	game.inc
@@ -61,8 +62,7 @@ musicNameList   dd          QUEUE_LENGTH        DUP(0)
 
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
-CyaeghaAudio    db  "Cyaegha.wav", 0
-SheriruthAudio  db  "Sheriruth.wav", 0
+Sheriruth       db  "levels\Sheriruth.level", 0
 musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
@@ -81,7 +81,6 @@ NoteTapJudgement proc  uses  esi ecx,  index
     local @judgeTime
     local @note
     local @record
-    local @diff
     mov esi, offset globalLevelRecord.currentIndices
     mov ecx, index
     shl ecx, 2
@@ -137,57 +136,48 @@ NoteTapJudgement_beginWhile:
     mov eax, (LevelNote PTR  [esi]).NoteType
     mov esi, NOTE_CATCH
     cmp eax, esi
-    jz  NoteTapJudgement_endWhile
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   judgeTime > note->time
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @note
-    mov eax, (LevelNote PTR [esi]).Time
-    mov esi, @judgeTime
-    .IF esi > eax
+    je  NoteTapJudgement_endWhile
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   Time diff = judgeTime - note->time;
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov eax, @judgeTime
     mov esi, @note
-    sub eax, (LevelNote PTR [esi]).Time
-    mov @diff, eax
-        .IF @diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_CRITICAL_PERFECT
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
-        .ELSEIF @diff <= NOTE_JUDGE_PERFECT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_PERFECT_LATE
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
-        .ELSEIF @diff <= NOTE_JUDGE_GREAT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_GREAT_LATE
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
+    mov eax, @judgeTime
+    sub eax, (LevelNote ptr [esi]).Time
+    ; if (diff <= 0)
+    .IF eax > 80000000h
+        neg eax; -diff >= 0
+        .IF eax <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_CRITICAL_PERFECT
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
+        .ELSEIF eax <= NOTE_JUDGE_PERFECT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_PERFECT_EARLY
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
+        .ELSEIF eax <= NOTE_JUDGE_GREAT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_GREAT_EARLY
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
         .ELSE
-        mov esi, @record
-        mov eax, NOTE_JUDGE_MISS
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
+            jmp NoteTapJudgement_endWhile
         .ENDIF
     .ELSE
-    mov esi, @note
-    mov eax, (LevelNote PTR [esi]).Time
-    sub eax, @judgeTime
-    mov @diff, eax
-        .IF @diff <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_CRITICAL_PERFECT
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
-        .ELSEIF @diff <= NOTE_JUDGE_PERFECT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_PERFECT_EARLY
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
-        .ELSEIF @diff <= NOTE_JUDGE_GREAT_LIMIT
-        mov esi, @record
-        mov eax, NOTE_JUDGE_GREAT_EARLY
-        mov (LevelNoteRecord PTR [esi]).judgement, eax
+        .IF eax <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_CRITICAL_PERFECT
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
+        .ELSEIF eax <= NOTE_JUDGE_PERFECT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_PERFECT_LATE
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
+        .ELSEIF eax <= NOTE_JUDGE_GREAT_LIMIT
+            mov esi, @record
+            mov eax, NOTE_JUDGE_GREAT_LATE
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
         .ELSE
-        jmp NoteTapJudgement_endWhile
+            mov esi, @record
+            mov eax, NOTE_JUDGE_MISS
+            mov (LevelNoteRecord PTR [esi]).judgement, eax
         .ENDIF
     .ENDIF
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -211,15 +201,13 @@ NoteTapJudgement_beginWhile:
     mov eax, @curIndex
     inc eax
     mov @curIndex, eax
-    jmp NoteTapJudgement_beginWhile
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   record->judgement != NOTE_JUDGE_MISS
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     mov esi, @record
     mov eax, (LevelNoteRecord PTR [esi]).judgement
-    .IF eax != NOTE_JUDGE_MISS
-    jmp NoteTapJudgement_endWhile
-    .ENDIF
+    cmp eax, NOTE_JUDGE_MISS
+    je NoteTapJudgement_beginWhile
 NoteTapJudgement_endWhile:
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;   sGame.levelRecord.currentIndices[index] = curIndex
@@ -286,37 +274,46 @@ NoteCatchJudgement_beginWhile:
     mov eax, (LevelNote PTR  [esi]).NoteType
     mov esi, NOTE_TAP
     cmp eax, esi
-    jz  NoteCatchJudgement_endWhile
+    je  NoteCatchJudgement_endWhile
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   note->time > currentTime + NOTE_JUDGE_PERFECT_LIMIT
+;   currentTime + NOTE_JUDGE_PERFECT_LIMIT - note->time < 0 => break
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     mov esi, @note
     mov eax, (LevelNote PTR [esi]).Time
     mov esi, currentTime
     add esi, NOTE_JUDGE_PERFECT_LIMIT
-    cmp eax, esi
-    jna NoteCatchJudgement_L7
+    sub esi, eax
+    cmp esi, 80000000h
+    jge  NoteCatchJudgement_endWhile
+
     mov esi, @note
     mov eax, (LevelNote PTR [esi]).Time
-    mov esi, @record
-    mov (LevelNoteRecord PTR [esi]).judgeTime, eax
-    mov eax, NOTE_JUDGE_CRITICAL_PERFECT
-    mov (LevelNoteRecord PTR [esi]).judgement, eax
-    mov esi, offset globalLevelRecord.catchJudgeCount
-    inc dword PTR [esi]
-    jmp NoteCatchJudgement_L8
-NoteCatchJudgement_L7:
-    mov eax, currentTime
-    mov esi, @record
-    mov (LevelNoteRecord PTR [esi]).judgeTime, eax
-    mov eax, NOTE_JUDGE_MISS
-    mov (LevelNoteRecord PTR [esi]).judgement, eax
-    mov esi, offset globalLevelRecord.catchJudgeCount
-    add esi, 4
-    inc dword PTR [esi]
-NoteCatchJudgement_L8:
+    add eax, NOTE_JUDGE_PERFECT_LIMIT
+    mov esi, offset globalKeyPressTime
+    mov ecx, index
+    shl ecx, 2
+    add esi, ecx
+    sub eax, [esi]
+    ; note->time + NOTE_JUDGE_PERFECT_LIMIT - sGame.keyPressTime[index] >= 0
+    .if eax < 80000000h
+        mov esi, @note
+        mov eax, (LevelNote PTR [esi]).Time
+        mov esi, @record
+        mov (LevelNoteRecord PTR [esi]).judgeTime, eax
+        mov (LevelNoteRecord PTR [esi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
+        mov esi, offset globalLevelRecord.catchJudgeCount
+        inc dword ptr [esi]
+    .else
+        mov eax, currentTime
+        mov esi, @record
+        mov (LevelNoteRecord PTR [esi]).judgeTime, eax
+        mov (LevelNoteRecord PTR [esi]).judgement, NOTE_JUDGE_MISS
+        mov esi, offset globalLevelRecord.catchJudgeCount
+        add esi, 4
+        inc dword ptr [esi]
+    .endif
     mov eax, @curIndex
-    add eax, 1
+    inc eax
     mov @curIndex, eax
     jmp NoteCatchJudgement_beginWhile
 NoteCatchJudgement_endWhile:
@@ -382,29 +379,54 @@ GameLevelCalcScore proc uses ebx edx esi
     ret
 GameLevelCalcScore endp
 
-GameInit proc uses esi ecx edi
-;		Load Bitmap
-		invoke	LoadBitmap, hInstance, INIT_PAGE
-		mov		_bg1, 	eax
-		invoke	LoadBitmap, hInstance, SELECT_PAGE
-		mov		_bg2, 	eax
-		invoke	LoadBitmap, hInstance, PLAY_PAGE
-		mov		_bg3, 	eax
+GameInit proc
+    local @hHeap
 
-        mov     esi,    offset  musicNameList
-        mov     [esi],  offset  musicName1
-        mov     [esi+4],offset  musicName2
-        mov     [esi+8],offset  musicName3
-		ret
+	invoke	LoadBitmap, hInstance, INIT_PAGE
+	mov		_bg1, 	eax
+	invoke	LoadBitmap, hInstance, SELECT_PAGE
+	mov		_bg2, 	eax
+	invoke	LoadBitmap, hInstance, PLAY_PAGE
+	mov		_bg3, 	eax
+
+    invoke GetProcessHeap
+    mov @hHeap, eax
+    invoke HeapAlloc, @hHeap, 0, 4 * type Level
+    mov globalLevels, eax
+
+    mov globalLevelCount, 2
+    invoke LevelLoad, offset Cyaegha, globalLevels
+    mov edi, globalLevels
+    add edi, type Level
+    invoke LevelLoad, offset Sheriruth, edi
+    
+    mov     esi,    offset  musicNameList
+    mov     [esi],  offset  musicName1
+    mov     [esi+4],offset  musicName2
+    mov     [esi+8],offset  musicName3
+	ret
 GameInit endp
+
+GameShutdown proc
+    local @hHeap
+
+    invoke GetProcessHeap
+    mov @hHeap, eax
+    invoke HeapFree, @hHeap, 0, globalLevels
+    ret
+GameShutdown endp
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameLevelReset
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameLevelReset proc uses eax ecx edi, levelIndex
+GameLevelReset proc uses eax ecx edx esi edi, levelIndex
     mov eax, levelIndex
     mov globalCurrentLevelID, eax
-    ; TODO: sGame.pCurLevel = &sGame.levels[levelIndex];
+    mov esi, globalLevels
+    mov edx, type Level
+    mul edx
+    add esi, eax
+    mov globalPCurLevel, esi
 
     invoke memset, offset globalLevelRecord, 0, type LevelRecord
     mov ecx, GAME_KEY_COUNT
@@ -436,6 +458,8 @@ GameUpdate proc uses eax ecx edx esi
                 invoke AudioOpen, globalCurLevelMusicID
                 invoke timeGetTime
                 mov globalLevelBeginTime, eax
+                mov eax, globalJudgeDelay
+                add globalLevelBeginTime, eax
                 mov globalLevelState, GAME_LEVEL_PLAYING
             .endif
         .elseif globalLevelState == GAME_LEVEL_PLAYING
@@ -462,6 +486,20 @@ GameUpdate_L1:
 	.endif
 	ret
 GameUpdate endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; GameDraw
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Str_length  proc uses esi ebx, address:dword
+    mov eax, 0
+    mov esi, address
+    .while  TRUE
+        mov bl, byte ptr [esi]
+        .break  .if bl == 0
+        inc eax
+        inc esi
+    .endw
+    ret
+Str_length  endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -496,9 +534,12 @@ GameDraw	proc uses esi, _hDC
             invoke Rectangle, _hDC, MUSIC2_X1, MUSIC2_Y1, MUSIC2_X2, MUSIC2_Y2
             invoke Rectangle, _hDC, MUSIC3_X1, MUSIC3_Y1, MUSIC3_X2, MUSIC3_Y2
             mov esi, offset musicNameList
-            invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], 7
-            invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], 9
-            invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], 4
+            invoke Str_length, [esi]
+            invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], eax
+            invoke Str_length, [esi + 4]
+            invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], eax
+            invoke Str_length, [esi + 8]
+            invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
         .elseif globalCurrentPage == PLAY_PAGE
 
         .endif
@@ -626,6 +667,57 @@ _ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
         .endif
         mov eax, TRUE
 		ret
-
 _ProcDlgMain	endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; changeQueue
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+changeQueue     proc	uses ebx edi esi ecx, degree:sword
+        .if globalCurrentPage != SELECT_PAGE
+            ret
+        .endif
+        mov esi, offset musicNameList
+        mov ecx, QUEUE_LENGTH
+        dec ecx
+        .if degree == 120
+        mov esi, offset musicNameList
+        mov eax, type dword
+        mul ecx
+        add esi, eax
+        mov edi, [esi]
+changeQueue_L1:
+        mov esi, offset musicNameList
+        mov ebx, ecx
+        dec ebx
+        mov eax, type dword
+        mul ebx
+        add esi, eax
+        mov ebx, [esi]
+        add esi, type dword
+        mov [esi], ebx
+        loop changeQueue_L1
+        mov esi, offset musicNameList
+        mov [esi], edi
+        .elseif degree == -120
+        mov esi, offset musicNameList
+        mov edi, [esi]
+changeQueue_L2:
+        mov esi, offset musicNameList
+        mov ebx, QUEUE_LENGTH
+        sub ebx, ecx
+        mov eax, type dword
+        mul ebx
+        add esi, eax
+        mov eax, [esi]
+        sub esi, type dword
+        mov [esi], eax
+        loop changeQueue_L2
+        mov esi, offset musicNameList
+        mov eax, type dword
+        mov ebx, QUEUE_LENGTH - 1
+        mul ebx
+        add esi, eax
+        mov [esi], edi        
+        .endif
+        ret
+changeQueue     endp
 end
