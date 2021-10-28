@@ -14,6 +14,8 @@ includelib	kernel32.lib
 include 	winmm.inc
 includelib	winmm.lib
 includelib  msvcrt.lib
+include     msimg32.inc
+includelib  msimg32.lib
 ;include     Irvine32.inc
 
 include     audio.inc
@@ -53,6 +55,10 @@ globalKeyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
+_sel_cover0    dword       0
+_sel_cover1     dword       0
+
+_item1          dword       0
 
 bmpTapEffect    dword       ?
 bmpCatchEffect  dword       ?
@@ -62,7 +68,7 @@ animCatchEffect AnimationClip <>
 settings        dword       0
 hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
-
+blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
 Sheriruth       db  "levels\Sheriruth.level", 0
@@ -74,6 +80,7 @@ musicName3      db  "TODO", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 memset proto C :ptr byte, :dword, :dword
+strcmp proto C :dword, :dword
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -391,6 +398,12 @@ GameInit proc
 	mov		_bg2, 	eax
 	invoke	LoadBitmap, hInstance, PLAY_PAGE
 	mov		_bg3, 	eax
+    invoke  LoadBitmap, hInstance, BUTTON
+    mov     _item1, eax
+    invoke  LoadBitmap, hInstance, MUSIC_SELECT_0
+    mov     _sel_cover0, eax
+    invoke  LoadBitmap, hInstance, MUSIC_SELECT_1
+    mov     _sel_cover1, eax
 
     invoke LoadBitmap, hInstance, TAP_EFFECT
     mov bmpTapEffect, eax
@@ -404,7 +417,8 @@ GameInit proc
     invoke HeapAlloc, @hHeap, 0, 4 * type Level
     mov globalLevels, eax
 
-    mov globalLevelCount, 2
+    mov globalLevelCount, 3
+    mov globalCurrentLevelID, 1
     invoke LevelLoad, offset Cyaegha, globalLevels
     mov edi, globalLevels
     add edi, type Level
@@ -497,7 +511,7 @@ GameUpdate_L1:
 	ret
 GameUpdate endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; GameDraw
+; Str_length
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Str_length  proc uses esi ebx, address:dword
     mov eax, 0
@@ -511,11 +525,33 @@ Str_length  proc uses esi ebx, address:dword
     ret
 Str_length  endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; obtain RGB
+  ;mov eax,红色＋绿色*100h＋蓝色*10000h
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+obtainRGB   proc uses esi ebx, R:dword, G:dword, B:dword
+  mov esi, B
+  mov eax, 10000h
+  mul esi
+  mov esi, eax
+  mov ebx, G
+  mov eax, 100h
+  mul ebx
+  mov ebx, eax
+  mov eax, R
+  add eax, ebx
+  add eax, esi
+  ret
+obtainRGB  endp
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDraw
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameDraw	proc uses esi, _hDC
+GameDraw	proc uses esi ebx, _hDC
 		local @hDcBack
 		local @hOldObject
+        local @hDcPen
+        local @R_
+        local @G_
+        local @B_
 		; DC for background 
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
@@ -538,18 +574,32 @@ GameDraw	proc uses esi, _hDC
         .if globalCurrentPage == INIT_PAGE
 
         .elseif globalCurrentPage == SELECT_PAGE
-            invoke CreatePen, PS_SOLID, 4, WHITE_PEN
             ;mov hPen, eax 
-            invoke Rectangle, _hDC, MUSIC1_X1, MUSIC1_Y1, MUSIC1_X2, MUSIC1_Y2
-            invoke Rectangle, _hDC, MUSIC2_X1, MUSIC2_Y1, MUSIC2_X2, MUSIC2_Y2
-            invoke Rectangle, _hDC, MUSIC3_X1, MUSIC3_Y1, MUSIC3_X2, MUSIC3_Y2
+            invoke	CreateCompatibleDC, _hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
+		    mov		@hDcBack, eax
+            .if     globalCurrentLevelID == 0
+                invoke SelectObject, @hDcBack, _sel_cover0
+                invoke BitBlt, _hDC, SELECT_COVER_X, SELECT_COVER_Y, \
+                    SELECT_COVER_WIDTH, SELECT_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .elseif globalCurrentLevelID == 1
+                invoke SelectObject, @hDcBack, _sel_cover1
+                invoke BitBlt, _hDC, SELECT_COVER_X, SELECT_COVER_Y, \
+                    SELECT_COVER_WIDTH, SELECT_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .endif
+            invoke SelectObject, @hDcBack, @hOldObject
+		    invoke DeleteDC, @hDcBack
             mov esi, offset musicNameList
+            invoke SetBkMode, _hDC, TRANSPARENT
+            mov    ebx, 255
+            invoke obtainRGB, ebx, ebx, ebx
+            invoke SetTextColor, _hDC, eax
             invoke Str_length, [esi]
             invoke TextOut,   _hDC, TEXTOUT1_X, TEXTOUT1_Y, [esi], eax
             invoke Str_length, [esi + 4]
             invoke TextOut,   _hDC, TEXTOUT2_X, TEXTOUT2_Y, [esi + 4], eax
             invoke Str_length, [esi + 8]
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
+            mov    eax, @hDcPen
         .elseif globalCurrentPage == PLAY_PAGE
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
@@ -583,7 +633,9 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
-        ; TODO
+        .if keyCode == 'H'
+            mov globalCurrentPage, PLAY_PAGE
+        .endif 
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
         mov ecx, GAME_KEY_COUNT
@@ -685,7 +737,7 @@ _ProcDlgMain	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; changeQueue
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-changeQueue     proc	uses ebx edi esi ecx, degree:sword
+changeQueue     proc	uses ebx edi esi ecx edx, degree:sword
         .if globalCurrentPage != SELECT_PAGE
             ret
         .endif
@@ -712,6 +764,7 @@ changeQueue_L1:
         mov esi, offset musicNameList
         mov [esi], edi
         .elseif degree == -120
+
         mov esi, offset musicNameList
         mov edi, [esi]
 changeQueue_L2:
@@ -732,6 +785,25 @@ changeQueue_L2:
         add esi, eax
         mov [esi], edi        
         .endif
+        mov edx, 0
+        mov eax, globalCurrentLevelID
+        .if degree == -120
+            inc eax
+            .if eax == globalLevelCount
+                mov eax, 0
+            .endif
+        .elseif degree == 120
+            .if eax == 0
+                mov eax, globalLevelCount
+                dec eax
+            .else
+                dec eax
+            .endif
+        .endif
+        mov globalCurrentLevelID, eax
+        div globalLevelCount
+        mov globalCurLevelMusicID, edx 
+
         ret
 changeQueue     endp
 end
