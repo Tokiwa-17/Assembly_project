@@ -428,6 +428,16 @@ GameInit proc
     mov     [esi],  offset  musicName1
     mov     [esi+4],offset  musicName2
     mov     [esi+8],offset  musicName3
+
+    mov     esi,    offset  globalKeyMaps
+    mov     al,     'F'
+    mov     byte ptr [esi], al
+    mov     al,     'G'
+    mov     byte ptr [esi + 1], al
+    mov     al,     'H'
+    mov     byte ptr [esi + 2], al
+    mov     al,     'J'
+    mov     byte ptr [esi + 3], al
 	ret
 GameInit endp
 
@@ -626,7 +636,7 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
             .if eax == 0
                 mov settings, 1
                 invoke  GetModuleHandle, NULL
-                invoke	DialogBoxParam,eax,DLG_MAIN,NULL,offset _ProcDlgMain,NULL
+                invoke	DialogBoxParam, eax, DLG_MAIN, NULL, offset _ProcDlgMain,NULL
             .endif
         .elseif keyCode == 'J'
             mov globalCurrentPage, SELECT_PAGE
@@ -716,16 +726,39 @@ _ProcDlgMain	proc	uses ebx edi esi hWnd, wMsg, wParam, lParam
                 mov byte ptr [esi], al
                 invoke CloseHandle, hEvent
                 invoke EndDialog, hWnd, NULL
+                mov eax, 0
+                mov settings, eax
             .elseif	ax ==	IDC_CANCEL
                 invoke CloseHandle, hEvent
                 invoke EndDialog, hWnd, NULL
+                mov eax, 0
+                mov settings, eax
             .endif
 ;********************************************************************
 		.elseif	eax ==	WM_CLOSE
 			invoke	CloseHandle, hEvent
 			invoke	EndDialog, hWnd, NULL
+            mov eax, 0
+            mov settings, eax
 ;********************************************************************
 		.elseif	eax ==	WM_INITDIALOG
+            invoke SetDlgItemInt, hWnd, DLG_SPEED, globalSpeedLevel, @bSigned
+            invoke SetDlgItemInt, hWnd, DLG_DELAY, globalJudgeDelay, @bSigned
+            mov eax, 0
+            mov @lpString[1], al
+            mov esi, offset globalKeyMaps
+            mov al, [esi]
+            mov @lpString[0], al
+            invoke SetDlgItemText, hWnd, DLG_KEY1, addr @lpString
+            mov al, [esi + 1]
+            mov @lpString[0], al
+            invoke SetDlgItemText, hWnd, DLG_KEY2, addr @lpString
+            mov al, [esi + 2]
+            mov @lpString[0], al
+            invoke SetDlgItemText, hWnd, DLG_KEY3, addr @lpString
+            mov al, [esi + 3]
+            mov @lpString[0], al
+            invoke SetDlgItemText, hWnd, DLG_KEY4, addr @lpString
 ;********************************************************************
 		.else
             mov	eax,FALSE
