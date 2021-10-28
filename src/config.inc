@@ -48,4 +48,17 @@ TEXTOUT2_Y   equ     470
 TEXTOUT3_X   equ     610
 TEXTOUT3_Y   equ     590
 QUEUE_LENGTH equ     3
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; PLAY_PAGE
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+TRACK_X1 equ 227
+TRACK_X2 equ 427
+TRACK_X3 equ 627
+TRACK_X4 equ 827
+TRACK_X5 equ 1027
+TRACK_Y1 equ 0
+TRACK_Y2 equ 960   
+JUDGE_Y equ 700 
+SCORE_X equ 1100
+SCORE_Y equ 50
 endif
