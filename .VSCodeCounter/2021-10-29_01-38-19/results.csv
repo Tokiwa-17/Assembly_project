@@ -1,0 +1,23 @@
+"filename", "language", "Markdown", "CUDA C++", "C", "C++", "masm", "comment", "blank", "total"
+"d:\Github\assembly\Assembly_project\README.md", "Markdown", 67, 0, 0, 0, 0, 0, 33, 100
+"d:\Github\assembly\Assembly_project\cpp\app.c", "C", 0, 0, 143, 0, 0, 5, 20, 168
+"d:\Github\assembly\Assembly_project\cpp\app.h", "CUDA C++", 0, 22, 0, 0, 0, 2, 9, 33
+"d:\Github\assembly\Assembly_project\cpp\game.c", "C", 0, 0, 204, 0, 0, 31, 20, 255
+"d:\Github\assembly\Assembly_project\cpp\game.h", "CUDA C++", 0, 59, 0, 0, 0, 22, 21, 102
+"d:\Github\assembly\Assembly_project\cpp\level.cpp", "C++", 0, 0, 0, 10, 0, 0, 3, 13
+"d:\Github\assembly\Assembly_project\cpp\level.h", "CUDA C++", 0, 58, 0, 0, 0, 3, 13, 74
+"d:\Github\assembly\Assembly_project\cpp\resource.h", "CUDA C++", 0, 2, 0, 0, 0, 0, 1, 3
+"d:\Github\assembly\Assembly_project\level-build\cyaegha.cpp", "C++", 0, 0, 0, 559, 0, 12, 5, 576
+"d:\Github\assembly\Assembly_project\level-build\level_builder.hpp", "C++", 0, 0, 0, 132, 0, 3, 18, 153
+"d:\Github\assembly\Assembly_project\level-build\sheriruth.cpp", "C++", 0, 0, 0, 883, 0, 13, 34, 930
+"d:\Github\assembly\Assembly_project\src\animation.asm", "masm", 0, 0, 0, 0, 87, 0, 9, 96
+"d:\Github\assembly\Assembly_project\src\animation.inc", "masm", 0, 0, 0, 0, 14, 0, 6, 20
+"d:\Github\assembly\Assembly_project\src\audio.asm", "masm", 0, 0, 0, 0, 58, 0, 9, 67
+"d:\Github\assembly\Assembly_project\src\audio.inc", "masm", 0, 0, 0, 0, 6, 0, 3, 9
+"d:\Github\assembly\Assembly_project\src\config.inc", "masm", 0, 0, 0, 0, 49, 11, 4, 64
+"d:\Github\assembly\Assembly_project\src\game.asm", "masm", 0, 0, 0, 0, 695, 112, 36, 843
+"d:\Github\assembly\Assembly_project\src\game.inc", "masm", 0, 0, 0, 0, 39, 11, 4, 54
+"d:\Github\assembly\Assembly_project\src\level.asm", "masm", 0, 0, 0, 0, 27, 6, 6, 39
+"d:\Github\assembly\Assembly_project\src\level.inc", "masm", 0, 0, 0, 0, 38, 15, 5, 58
+"d:\Github\assembly\Assembly_project\src\main.asm", "masm", 0, 0, 0, 0, 149, 55, 8, 212
+"Total", "-", 67, 141, 347, 1584, 1162, 301, 267, 3869

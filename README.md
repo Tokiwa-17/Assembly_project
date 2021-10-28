@@ -87,16 +87,11 @@ VSCode CMake-Tools
 
 - [x] 游戏界面设计				齐仕杰、范容彰
 - [x] 选歌页面设计	            齐仕杰、范容彰
-- [ ] 结算页面设计                齐仕杰、范容彰
+- [x] 结算页面设计                齐仕杰、范容彰
 - [ ] 开始页面设计                齐仕杰、范容彰 
 - [ ] GameDrawNotes        涂轶杰
-
-- [ ] 设置、选歌页面更新     贠龙飞 
-
-  globalCurrentLevelID +1 2
-
-  globalLevelCount 2
-
+- [x] 设置、选歌页面更新     贠龙飞 
+- [ ] 结算页面专辑封面
 - [ ] 
 
 * Cyaegha

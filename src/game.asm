@@ -55,6 +55,7 @@ globalKeyPressTime    dword   GAME_KEY_COUNT      DUP(0)
 _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
+_bg4            dword       0
 _sel_cover0    dword       0
 _sel_cover1     dword       0
 
@@ -398,8 +399,8 @@ GameInit proc
 	mov		_bg2, 	eax
 	invoke	LoadBitmap, hInstance, PLAY_PAGE
 	mov		_bg3, 	eax
-    invoke  LoadBitmap, hInstance, BUTTON
-    mov     _item1, eax
+    invoke  LoadBitmap, hInstance, RESULT_PAGE
+    mov     _bg4,   eax
     invoke  LoadBitmap, hInstance, MUSIC_SELECT_0
     mov     _sel_cover0, eax
     invoke  LoadBitmap, hInstance, MUSIC_SELECT_1
@@ -575,6 +576,9 @@ GameDraw	proc uses esi ebx, _hDC
 		.elseif globalCurrentPage == PLAY_PAGE
 			;invoke	LoadBitmap, hInstance, PLAY_PAGE
 			invoke	SelectObject, @hDcBack, _bg3
+        
+        .elseif globalCurrentPage == RESULT_PAGE
+            invoke  SelectObject, @hDcBack, _bg4
 
 		.endif
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hDcBack, 0, 0, SRCCOPY
@@ -614,6 +618,20 @@ GameDraw	proc uses esi ebx, _hDC
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
             .endif
+        .elseif globalCurrentPage == RESULT_PAGE
+            invoke	CreateCompatibleDC, _hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
+		    mov		@hDcBack, eax
+            .if     globalCurrentLevelID == 0
+                invoke SelectObject, @hDcBack, _sel_cover0
+                invoke BitBlt, _hDC, RESULT_COVER_X, RESULT_COVER_Y, \
+                    RESULT_COVER_WIDTH, RESULT_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .elseif globalCurrentLevelID == 1
+                invoke SelectObject, @hDcBack, _sel_cover1
+                invoke BitBlt, _hDC, RESULT_COVER_X, RESULT_COVER_Y, \
+                    RESULT_COVER_WIDTH, RESULT_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .endif
+            invoke SelectObject, @hDcBack, @hOldObject
+		    invoke DeleteDC, @hDcBack
         .endif
 		ret
 GameDraw	endp
@@ -640,6 +658,10 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
             .endif
         .elseif keyCode == 'J'
             mov globalCurrentPage, SELECT_PAGE
+        ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
+        .elseif keyCode == 'F'
+            mov globalCurrentPage, RESULT_PAGE
+        ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
@@ -689,6 +711,9 @@ GameKeyCallback_L2:
             ret
         .endif
         loop GameKeyCallback_L2
+    ;@@@@@@@@@@@@@@@@@@@@@ 结算 @@@@@@@@@@@@@@@@@@@@@
+    .elseif globalCurrentPage == RESULT_PAGE
+
     .endif
     ret
 GameKeyCallback     endp
