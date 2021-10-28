@@ -15,12 +15,12 @@ ICO_GAME		equ		1000
 INIT_PAGE		equ		100
 SELECT_PAGE 	equ		101
 PLAY_PAGE		equ		102
+RESULT_PAGE     equ     103
 
 TAP_EFFECT      equ     200
 CATCH_EFFECT    equ     201
-BUTTON          equ     103
-MUSIC_SELECT_0   equ    104
-MUSIC_SELECT_1   equ    105
+MUSIC_SELECT_0   equ    105
+MUSIC_SELECT_1   equ    106
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
@@ -60,5 +60,11 @@ SELECT_COVER_X  equ  187
 SELECT_COVER_Y  equ  193
 SELECT_COVER_WIDTH   equ    512
 SELECT_COVER_HEIGHT  equ    512
-
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; RESULT_PAGE
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+RESULT_COVER_X equ  52
+RESULT_COVER_Y equ  204
+RESULT_COVER_WIDTH   equ    512
+RESULT_COVER_HEIGHT  equ    512
 endif
