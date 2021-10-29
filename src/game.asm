@@ -48,6 +48,7 @@ globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
 globalLevelState      dword   0
 globalCurLevelMusicID dword   0
+globalSelectDeviceID  dword   0
 globalLevelResetTime  dword   0
 globalLevelBeginTime  dword   0
 globalLevelRecord     LevelRecord       <>  
@@ -66,6 +67,8 @@ _item1          dword       0
 settings        dword       0
 hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
+mci_1           dd          0
+mci_2           dd          0
 blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
@@ -363,7 +366,7 @@ GameLevelCalcScore proc uses ebx edx esi
     ret
 GameLevelCalcScore endp
 
-GameInit proc
+GameInit proc uses edi esi edx
     local @hHeap
 
     mov globalSpeedLevel, 10
@@ -410,6 +413,15 @@ GameInit proc
     mov     byte ptr [esi + 2], al
     mov     al,     'J'
     mov     byte ptr [esi + 3], al
+
+    mov esi, globalLevels
+    invoke AudioOpen, addr (Level ptr [esi]).musicSelectPath
+    mov mci_1, eax
+    mov edx, type Level
+    add esi, edx
+    invoke AudioOpen, addr (Level ptr [esi]).musicSelectPath
+    mov mci_2, eax
+    mov globalSelectDeviceID, eax
 	ret
 GameInit endp
 
@@ -734,6 +746,7 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
             .endif
         .elseif keyCode == 'J'
             mov globalCurrentPage, SELECT_PAGE
+            invoke AudioPlay, globalSelectDeviceID
         ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
         .elseif keyCode == 'F'
             mov globalCurrentPage, RESULT_PAGE
@@ -743,6 +756,7 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     .elseif globalCurrentPage == SELECT_PAGE
         .if keyCode == 'H'
             mov globalCurrentPage, PLAY_PAGE
+            invoke AudioStop, globalSelectDeviceID
             invoke GameLevelReset
         .endif 
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
@@ -873,6 +887,7 @@ _ProcDlgMain	endp
 ; changeQueue
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 changeQueue     proc	uses ebx edi esi ecx edx, degree:sword
+        local @mci_1, @mci_2
         .if globalCurrentPage != SELECT_PAGE
             ret
         .endif
@@ -937,8 +952,24 @@ changeQueue_L2:
         .endif
         mov globalCurrentLevelID, eax
         div globalLevelCount
-        mov globalCurLevelMusicID, edx 
+        mov globalCurrentLevelID, edx 
 
+        .if globalCurrentLevelID == 2
+            invoke AudioStop, globalSelectDeviceID
+            ;mov globalSelectDeviceID, 0
+            jmp changeQueue_L3
+        .endif 
+        invoke AudioStop, globalSelectDeviceID
+        .if globalCurrentLevelID == 0
+            invoke AudioPlay, mci_1
+            mov eax, mci_1
+            mov globalSelectDeviceID, eax
+        .elseif globalCurrentLevelID == 1
+            invoke AudioPlay, mci_2
+            mov eax, mci_2
+            mov globalSelectDeviceID, eax
+        .endif
+changeQueue_L3:
         ret
 changeQueue     endp
 end
