@@ -5,3 +5,4 @@ function (add_level level_name)
 endfunction()
 
 add_level(cyaegha)
+add_level(sheriruth)

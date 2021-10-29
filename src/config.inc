@@ -6,6 +6,10 @@ WINDOW_HEIGHT 			equ 	960
 WINDOW_WIDTH  			equ		1280
 ID_TIMER				equ		1
 TIMER_MAIN_INTERVAL		equ		16
+GAME_LEVEL_WAIT_TIME     equ     1000
+
+TAP_NOTE_HEIGHT   equ 50
+CATCH_NOTE_HEIGHT equ 50
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
 ICO_GAME		equ		1000
@@ -14,6 +18,13 @@ ICO_GAME		equ		1000
 INIT_PAGE		equ		100
 SELECT_PAGE 	equ		101
 PLAY_PAGE		equ		102
+RESULT_PAGE     equ     103
+
+TAP_EFFECT      equ     200
+CATCH_EFFECT    equ     201
+MUSIC_SELECT_0   equ    105
+MUSIC_SELECT_1   equ    106
+
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -41,24 +52,45 @@ MUSIC3_X1    equ     560
 MUSIC3_Y1    equ     580
 MUSIC3_X2    equ     720
 MUSIC3_Y2    equ     620
-TEXTOUT1_X   equ     610
-TEXTOUT1_Y   equ     350
-TEXTOUT2_X   equ     610
-TEXTOUT2_Y   equ     470
-TEXTOUT3_X   equ     610
-TEXTOUT3_Y   equ     590
+TEXTOUT1_X   equ     1122
+TEXTOUT1_Y   equ     339
+TEXTOUT2_X   equ     1051
+TEXTOUT2_Y   equ     474
+TEXTOUT3_X   equ     1122
+TEXTOUT3_Y   equ     609
 QUEUE_LENGTH equ     3
+SELECT_COVER_X  equ  187
+SELECT_COVER_Y  equ  193
+SELECT_COVER_WIDTH   equ    512
+SELECT_COVER_HEIGHT  equ    512
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; PLAY_PAGE
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-TRACK_X1 equ 227
-TRACK_X2 equ 427
-TRACK_X3 equ 627
-TRACK_X4 equ 827
-TRACK_X5 equ 1027
-TRACK_Y1 equ 0
-TRACK_Y2 equ 960   
-JUDGE_Y equ 700 
-SCORE_X equ 1100
-SCORE_Y equ 50
+SONGTEXT_X equ 14
+SONGTEXT_Y equ 317
+MUSICIANTEXT_X equ 14
+MUSICIANTEXT_Y equ 398
+SCORETEXT_X equ 1010
+SCORETEXT_Y equ 68
+PERFECTTEXT_X equ 1142
+PERFECTTEXT_Y equ 720
+GREATTEXT_X equ 1142
+GREATTEXT_Y equ 800
+MISSTEXT_X equ 1142
+MISSTEXT_Y equ 880
+TRACT0_X equ 257
+TRACT1_X equ 437
+TRACT2_X equ 617
+TRACT3_X equ 797
+TRACT4_X equ 979
+TRACT_TOP_Y equ 0
+TRACT_BOTTOM_Y equ WINDOW_HEIGHT
+JUDGELINE_Y equ 800
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; RESULT_PAGE
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+RESULT_COVER_X equ  52
+RESULT_COVER_Y equ  204
+RESULT_COVER_WIDTH   equ    512
+RESULT_COVER_HEIGHT  equ    512
 endif

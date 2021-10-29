@@ -68,8 +68,6 @@ extern "C"
 
     int LevelLoad(const TCHAR *filePath, Level* pLevel);
 
-    void LevelDestroy(Level *pLevel);
-
 #ifdef __cplusplus
 }
 #endif

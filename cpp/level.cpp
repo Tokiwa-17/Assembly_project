@@ -10,9 +10,3 @@ int LevelLoad(const TCHAR *filePath, Level* pLevel)
     ifs.read(reinterpret_cast<char *>(pLevel), sizeof(Level));
     return 0;
 }
-
-void LevelDestroy(Level *pLevel)
-{
-    for (size_t i = 0; i < GAME_KEY_COUNT; ++i)
-        delete pLevel->notes[i];
-}
