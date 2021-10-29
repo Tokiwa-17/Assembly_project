@@ -20,12 +20,14 @@ includelib  msimg32.lib
 
 include     audio.inc
 include 	game.inc
-include     animation.inc
+include     draw.inc
 include     config.inc
 include     level.inc
 
 extern hInstance:dword
 extern hMainWin:dword
+
+public globalSpeedLevel
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; data
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -60,11 +62,6 @@ _sel_cover0    dword       0
 _sel_cover1     dword       0
 
 _item1          dword       0
-
-bmpTapEffect    dword       ?
-bmpCatchEffect  dword       ?
-animTapEffect   AnimationClip <>
-animCatchEffect AnimationClip <>
 
 settings        dword       0
 hEvent          dd          0
@@ -336,31 +333,6 @@ NoteCatchJudgement_endWhile:
     mov dword PTR [esi], eax
     ret
 NoteCatchJudgement  endp
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-; GameCalcNoteCenterY
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameCalcNoteCenterY     proc    uses eax ebx,    noteTime, currentTime
-    mov eax, currentTime
-    cmp eax, noteTime
-    jbe     GameCalcNoteCenterY_L2
-GameCalcNoteCenterY_L1:
-    mov eax, currentTime
-    sub eax, noteTime
-    mul globalSpeedLevel
-    shr eax, 4
-    add eax, globalJudgeLineY
-    jmp     GameCalcNoteCenterY_L3
-GameCalcNoteCenterY_L2:
-    mov eax, noteTime
-    sub eax, currentTime
-    mul globalSpeedLevel
-    shr eax, 4
-    mov ebx, globalJudgeLineY
-    sub ebx, eax
-    mov eax, ebx
-GameCalcNoteCenterY_L3:
-    ret
-GameCalcNoteCenterY      endp
 
 GameLevelCalcScore proc uses ebx edx esi
     mov esi, offset globalLevelRecord.tapJudgesCount
@@ -406,12 +378,7 @@ GameInit proc
     invoke  LoadBitmap, hInstance, MUSIC_SELECT_1
     mov     _sel_cover1, eax
 
-    invoke LoadBitmap, hInstance, TAP_EFFECT
-    mov bmpTapEffect, eax
-    invoke AnimationInit, bmpTapEffect, 4, 4, offset animTapEffect
-    invoke LoadBitmap, hInstance, CATCH_EFFECT
-    mov bmpCatchEffect, eax
-    invoke AnimationInit, bmpCatchEffect, 4, 4, offset animCatchEffect
+    invoke GameLoadNoteAssets
 
     invoke GetProcessHeap
     mov @hHeap, eax
@@ -502,20 +469,27 @@ GameUpdate proc uses eax ecx edx esi
             mov edx, globalLevelBeginTime
             sub eax, edx
             mov @currentTime, eax
-            mov ecx, GAME_KEY_COUNT
+            mov esi, globalPCurLevel
+            mov edx, (Level ptr [esi]).totalTime
+            .if eax < edx
+                mov ecx, GAME_KEY_COUNT
 GameUpdate_L1:
-            mov eax, GAME_KEY_COUNT
-            sub eax, ecx
-            mov edx, eax
-            shl eax, 2
-            mov esi, offset globalKeyPressing
-            add esi, eax
-            mov eax, [esi]
-            .if al > 0
-                invoke NoteCatchJudgement, edx, @currentTime
+                mov eax, GAME_KEY_COUNT
+                sub eax, ecx
+                mov edx, eax
+                shl eax, 2
+                mov esi, offset globalKeyPressing
+                add esi, eax
+                mov eax, [esi]
+                .if al > 0
+                    push ecx
+                    invoke NoteCatchJudgement, edx, @currentTime
+                    pop ecx
+                .endif
+                loop GameUpdate_L1
+            .else
+                mov globalCurrentPage, RESULT_PAGE
             .endif
-            loop GameUpdate_L1
-
             ; TODO: other play logic
         .endif
 	.endif
@@ -639,7 +613,108 @@ GameDraw	endp
 ; GameDrawNotes
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 GameDrawNotes proc hDC: dword
-    ; TODO
+    local @currentTime: dword
+    local @keyi: dword
+    local @pRecords: ptr LevelNoteRecord
+    local @pCurrentID: ptr dword
+    local @pTheRecord: ptr LevelNoteRecord
+    local @pNotes: ptr LevelNote
+    local @pNoteCount: ptr dword
+    local @pTheNote: ptr LevelNote
+    local @i: dword
+    invoke timeGetTime
+    mov @currentTime, eax
+    mov @keyi, 0
+    mov esi, offset globalLevelRecord
+    mov @pCurrentID, esi
+    add esi, type LevelRecord
+    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNoteRecord
+    mov @pRecords, esi
+    mov esi, globalPCurLevel
+    add esi, type Level
+    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNote
+    mov @pNotes, esi
+    sub esi, GAME_KEY_COUNT * type dword
+    mov @pNoteCount, esi
+GameDrawNotes_L1:
+    mov esi, @pCurrentID
+    mov eax, [esi]
+    mov @i, eax
+    mov edx, 8; type LevelNote, type LevelNoteRecord
+    mul edx
+    mov edx, @pRecords
+    add edx, eax
+    mov @pTheRecord, edx 
+    mov edx, @pNotes
+    add edx, eax
+    mov @pTheNote, edx
+GameDrawNotes_L2:
+    mov eax, @i
+    test eax, eax
+    jz GameDrawNotes_L2_Exit
+    dec eax
+    mov @i, eax
+    mov eax, @pTheRecord
+    sub eax, type LevelNoteRecord
+    mov @pTheRecord, eax
+    mov eax, @pTheNote
+    sub eax, type LevelNote
+    mov @pTheNote, eax
+
+    mov esi, @pTheRecord
+    mov eax, (LevelNoteRecord ptr [esi]).judgement
+    cmp eax, NOTE_JUDGE_MISS
+    je GameDrawNotes_L2
+    mov edx, @currentTime
+    sub edx, (LevelNoteRecord ptr [esi]).judgeTime
+    mov esi, @pTheNote
+    invoke GameDrawEffect, hDC, @keyi, (LevelNote ptr [esi]).NoteType, edx
+    test eax, eax
+    jnz GameDrawNotes_L2
+GameDrawNotes_L2_Exit:
+    mov esi, @pCurrentID
+    mov eax, [esi]
+    mov @i, eax
+    mov edx, type LevelNote
+    mul edx
+    mov edx, @pNotes
+    add edx, eax
+    mov @pTheNote, edx
+    mov eax, @i
+    mov esi, @pNoteCount
+    mov edx, @pTheNote
+GameDrawNotes_L3:
+    cmp eax, [esi]
+    jge GameDrawNotes_L3_Exit
+    invoke GameDrawOneNote, hDC, @keyi, edx, @currentTime
+    test eax, eax
+    jz GameDrawNotes_L3_Exit
+
+    mov eax, @i
+    inc eax
+    mov @i, eax
+    mov esi, @pNoteCount
+    add esi, type dword
+    mov @pNoteCount, esi
+    mov edx, @pTheNote
+    add edx, type LevelNote
+    mov @pTheNote, edx
+    jmp GameDrawNotes_L3
+GameDrawNotes_L3_Exit:
+    mov esi, @pCurrentID
+    add esi, type dword
+    mov @pCurrentID, esi
+    mov esi, @pRecords
+    add esi, MAX_NOTE_LENGTH * type LevelNoteRecord
+    mov @pRecords, esi
+    mov esi, @pNotes
+    add esi, MAX_NOTE_LENGTH * type LevelNote
+    mov @pNotes, esi
+    mov eax, @keyi
+    inc eax
+    mov @keyi, eax
+    cmp eax, GAME_KEY_COUNT
+    jl GameDrawNotes_L1
     ret
 GameDrawNotes endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

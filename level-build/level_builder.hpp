@@ -41,7 +41,7 @@ public:
 
     ~LevelBuilder()
     {
-        level.totalTime = Time(ceilf(currentTime * 1000));
+        level.totalTime = Time(ceilf(currentTime * 1000) + 1000);
         size_t offset = 0;
         for (size_t i = 0; i < GAME_KEY_COUNT; ++i)
         {

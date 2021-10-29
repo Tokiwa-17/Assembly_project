@@ -8,11 +8,6 @@ include     windows.inc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; EQU 等值段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GAME_PAGE_HOME          equ     0
-GAME_PAGE_CHOOSE        equ     1
-GAME_PAGE_SETTING       equ     2
-GAME_PAGE_PLAYING       equ     3
-GAME_PAGE_RESULT        equ     4
 
 GAME_LEVEL_RESET        equ     0
 GAME_LEVEL_PLAYING      equ     1
@@ -43,7 +38,6 @@ GameShutdown                    PROTO
 GameDraw                        PROTO,      hDC:dword
 GameUpdate                      PROTO
 GameKeyCallback                 PROTO       keyCode:byte, down:byte, previousDown:byte
-GameCalcNoteCenterY             PROTO,      noteTime:dword, currentTime:dword
 GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 NoteTapJudgement                PROTO,      index:dword

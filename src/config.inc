@@ -7,6 +7,9 @@ WINDOW_WIDTH  			equ		1280
 ID_TIMER				equ		1
 TIMER_MAIN_INTERVAL		equ		16
 GAME_LEVEL_WAIT_TIME     equ     1000
+
+TAP_NOTE_HEIGHT   equ 50
+CATCH_NOTE_HEIGHT equ 50
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ico
 ICO_GAME		equ		1000
@@ -60,6 +63,29 @@ SELECT_COVER_X  equ  187
 SELECT_COVER_Y  equ  193
 SELECT_COVER_WIDTH   equ    512
 SELECT_COVER_HEIGHT  equ    512
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; PLAY_PAGE
+;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+SONGTEXT_X equ 14
+SONGTEXT_Y equ 317
+MUSICIANTEXT_X equ 14
+MUSICIANTEXT_Y equ 398
+SCORETEXT_X equ 1010
+SCORETEXT_Y equ 68
+PERFECTTEXT_X equ 1142
+PERFECTTEXT_Y equ 720
+GREATTEXT_X equ 1142
+GREATTEXT_Y equ 800
+MISSTEXT_X equ 1142
+MISSTEXT_Y equ 880
+TRACT0_X equ 257
+TRACT1_X equ 437
+TRACT2_X equ 617
+TRACT3_X equ 797
+TRACT4_X equ 979
+TRACT_TOP_Y equ 0
+TRACT_BOTTOM_Y equ WINDOW_HEIGHT
+JUDGELINE_Y equ 800
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; RESULT_PAGE
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
