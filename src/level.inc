@@ -44,8 +44,7 @@ totalTapCount   dword   0
 totalCatchCount dword   0
 totalNoteCount  dword   0
 noteCounts      dword   GAME_KEY_COUNT      DUP(0)
-; 指向LevelNote结构体的指针
-notes           dword   GAME_KEY_COUNT * MAX_NOTE_LENGTH DUP(0)
+notes           LevelNote   GAME_KEY_COUNT * MAX_NOTE_LENGTH DUP(<>)
 Level       ends
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;函数声明

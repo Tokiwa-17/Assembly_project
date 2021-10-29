@@ -78,7 +78,8 @@ musicName3      db  "TODO", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 memset proto C :ptr byte, :dword, :dword
-strcmp proto C :dword, :dword
+strcmp proto C :ptr sbyte, :ptr sbyte
+strlen proto C :ptr sbyte
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -231,7 +232,7 @@ NoteTapJudgement endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteCatchJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-NoteCatchJudgement	proc    uses  eax esi ecx,  index, currentTime
+NoteCatchJudgement  proc uses esi ecx, index, currentTime
     local @curIndex
     local @note
     local @record
@@ -365,6 +366,9 @@ GameLevelCalcScore endp
 GameInit proc
     local @hHeap
 
+    mov globalSpeedLevel, 10
+    mov globalJudgeDelay, 0
+
 	invoke	LoadBitmap, hInstance, INIT_PAGE
 	mov		_bg1, 	eax
 	invoke	LoadBitmap, hInstance, SELECT_PAGE
@@ -421,9 +425,8 @@ GameShutdown endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameLevelReset
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameLevelReset proc uses eax ecx edx esi edi, levelIndex
-    mov eax, levelIndex
-    mov globalCurrentLevelID, eax
+GameLevelReset proc uses ecx edx esi edi
+    mov eax, globalCurrentLevelID
     mov esi, globalLevels
     mov edx, type Level
     mul edx
@@ -446,28 +449,25 @@ GameLevelReset_L1:
     invoke AudioOpen, addr (Level ptr [esi]).musicPath
     mov globalCurLevelMusicID, eax
     ret
-GameLevelReset      endp
+GameLevelReset endp
 
-GameUpdate proc uses eax ecx edx esi
+GameUpdate proc uses ecx edx esi
 	local	@currentTime
     .if globalCurrentPage == PLAY_PAGE
         .if globalLevelState == GAME_LEVEL_RESET
             invoke timeGetTime
-            mov edx, globalLevelResetTime
-            sub eax, edx
+            sub eax, globalLevelResetTime
             mov edx, GAME_LEVEL_WAIT_TIME
             .if eax >= edx
-                invoke AudioOpen, globalCurLevelMusicID
+                invoke AudioPlay, globalCurLevelMusicID
                 invoke timeGetTime
+                add eax, globalJudgeDelay
                 mov globalLevelBeginTime, eax
-                mov eax, globalJudgeDelay
-                add globalLevelBeginTime, eax
                 mov globalLevelState, GAME_LEVEL_PLAYING
             .endif
         .elseif globalLevelState == GAME_LEVEL_PLAYING
             invoke timeGetTime
-            mov edx, globalLevelBeginTime
-            sub eax, edx
+            sub eax, globalLevelBeginTime
             mov @currentTime, eax
             mov esi, globalPCurLevel
             mov edx, (Level ptr [esi]).totalTime
@@ -623,6 +623,7 @@ GameDrawNotes proc hDC: dword
     local @pTheNote: ptr LevelNote
     local @i: dword
     invoke timeGetTime
+    sub eax, globalLevelBeginTime
     mov @currentTime, eax
     mov @keyi, 0
     mov esi, offset globalLevelRecord
@@ -742,6 +743,7 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     .elseif globalCurrentPage == SELECT_PAGE
         .if keyCode == 'H'
             mov globalCurrentPage, PLAY_PAGE
+            invoke GameLevelReset
         .endif 
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
@@ -778,7 +780,7 @@ GameKeyCallback_L2:
                 mov esi, offset globalKeyPressing
                 mov eax, @index
                 add esi, eax
-                mov byte ptr[esi], 0
+                mov byte ptr [esi], 0
                 invoke timeGetTime
                 sub eax, globalLevelBeginTime
                 invoke NoteCatchJudgement, @index, eax
