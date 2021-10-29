@@ -37,6 +37,7 @@ musicName       db      MAX_NAME_LENGTH     DUP(0)
 author          db      MAX_NAME_LENGTH     DUP(0)
 musicPath       db      MAX_NAME_LENGTH     DUP(0)
 imagePath       db      MAX_NAME_LENGTH     DUP(0)
+musicSelectPath db      MAX_NAME_LENGTH     DUP(0)
 LevelDifficulty dword   0
 totalTime       dword   0
 totalTapCount   dword   0

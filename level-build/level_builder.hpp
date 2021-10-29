@@ -15,6 +15,7 @@ struct LevelBuilderInfo
     std::string_view author;
     std::string_view musicPath;
     std::string_view imagePath;
+    std::string_view musicSelectPath;
     LevelDifficulty difficulty;
     Time offset;
 };
@@ -33,6 +34,8 @@ public:
         level.musicPath[info.musicPath.size()] = '\0';
         memcpy_s(level.imagePath, MAX_NAME_LENGTH - 1, info.imagePath.data(), info.imagePath.size());
         level.imagePath[info.imagePath.size()] = '\0';
+        memcpy_s(level.musicSelectPath, MAX_NAME_LENGTH - 1, info.musicSelectPath.data(), info.musicSelectPath.size());
+        level.musicSelectPath[info.musicSelectPath.size()] = '\0';
         level.difficulty = info.difficulty;
 
         currentBPM = initBPM;
@@ -66,9 +69,9 @@ public:
         currentBPM = bpm;
     }
 
-    /// @brief ÔÚµ±Ç°Ê±¿ÌÌí¼ÓÒô·û
-    /// @param timeVal Ê±Öµ e.g. {3, 4} ±íÊ¾3¸ö4·ÖÒô·ûÊ±Öµ
-    /// @param note Òô·û e.g. {1, 'o'}, {2, '-'} ·Ö±ð±íÊ¾¹ìµÀ1ÉÏÒ»¸ötap, ¹ìµÀ2ÉÏÒ»¸öcatch
+    /// @brief ï¿½Úµï¿½Ç°Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// @param timeVal Ê±Öµ e.g. {3, 4} ï¿½ï¿½Ê¾3ï¿½ï¿½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµ
+    /// @param note ï¿½ï¿½ï¿½ï¿½ e.g. {1, 'o'}, {2, '-'} ï¿½Ö±ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½1ï¿½ï¿½Ò»ï¿½ï¿½tap, ï¿½ï¿½ï¿½2ï¿½ï¿½Ò»ï¿½ï¿½catch
     void Add(std::pair<uint8_t, uint8_t> timeVal, std::pair<uint8_t, char> note)
     {
         assert(timeVal.second > 0);

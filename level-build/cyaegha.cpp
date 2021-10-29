@@ -22,6 +22,7 @@ int main()
     info.name = "Cyaegha";
     info.author = "USAO";
     info.musicPath = "levels/Cyaegha.wav";
+    info.musicSelectPath = "levels/Cyaegha_30s.wav";
     info.difficulty = DIFFICULTY_NORMAL;
     info.offset = 0; // TODO
 
