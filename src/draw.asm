@@ -27,6 +27,9 @@ bmpCatchEffect  dword       ?
 animTapEffect   AnimationClip <>
 animCatchEffect AnimationClip <>
 
+.const
+tractXarr dword TRACT0_X, TRACT1_X, TRACT2_X, TRACT3_X, TRACT4_X
+
 .code
 AnimationInit proc uses edx edi, image: dword, rows: dword, columns: dword, pClip: ptr AnimationClip
     local @bmpInfo: BITMAP
@@ -60,7 +63,6 @@ GameLoadNoteAssets endp
 
 GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, animTime: dword
     local @anim
-    local @xarr[5]: dword
     local @dstX: dword
     local @dstY: dword
     local @dstW: dword
@@ -98,12 +100,7 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     mul (AnimationClip ptr [esi]).frameWidth
     mov @srcX, eax
 
-    mov @xarr[0], TRACT0_X
-    mov @xarr[1], TRACT1_X
-    mov @xarr[2], TRACT2_X
-    mov @xarr[3], TRACT3_X
-    mov @xarr[4], TRACT4_X
-    lea esi, @xarr
+    mov esi, offset tractXarr
     mov eax, keyIndex
     shl eax, 2
     add esi, eax
@@ -142,7 +139,6 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
 GameDrawEffect endp
 
 GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr LevelNote, currentTime: dword
-    local @xarr[5]: dword
     local @noteCY: dword
     local @rect: RECT
     local @brush: HBRUSH
@@ -152,25 +148,21 @@ GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr Le
     sub eax, (LevelNote ptr [esi]).Time
     imul globalSpeedLevel
     cdq
-    mov ebx, 16
+    mov ebx, 9
     idiv ebx
     add eax, JUDGELINE_Y
     mov edx, eax
-    mov eax, 0
+    mov eax, 1
     mov @noteCY, edx
     cmp edx, TRACT_BOTTOM_Y
     jg GameDrawOneNote_Exit
+    mov eax, 0
     sub edx, TRACT_TOP_Y
     shl edx, 1
     jc GameDrawOneNote_Exit
     mov edx, (LevelNote ptr [esi]).NoteType
 
-    mov @xarr[0], TRACT0_X
-    mov @xarr[1], TRACT1_X
-    mov @xarr[2], TRACT2_X
-    mov @xarr[3], TRACT3_X
-    mov @xarr[4], TRACT4_X
-    lea esi, @xarr
+    mov esi, offset tractXarr
     mov eax, keyIndex
     shl eax, 2
     add esi, eax
@@ -184,13 +176,13 @@ GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr Le
         mov @rect.top, eax
         add eax, TAP_NOTE_HEIGHT
         mov @rect.bottom, eax
-        invoke CreateSolidBrush, 00f000e0h
+        invoke CreateSolidBrush, 00e000f0h
     .elseif edx == NOTE_CATCH
         sub eax, CATCH_NOTE_HEIGHT / 2
         mov @rect.top, eax
         add eax, CATCH_NOTE_HEIGHT
         mov @rect.bottom, eax
-        invoke CreateSolidBrush, 00f0c000h
+        invoke CreateSolidBrush, 0000c0f0h
     .endif
     push eax
     invoke FillRect, hDC, addr @rect, eax

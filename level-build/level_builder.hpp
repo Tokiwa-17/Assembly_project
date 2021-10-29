@@ -47,6 +47,7 @@ public:
         {
             assert(notes[i].size() < GAME_MAX_NOTES);
             level.noteCounts[i] = uint32_t(notes[i].size());
+            memcpy_s(level.notes[i], GAME_MAX_NOTES * sizeof(LevelNote), notes[i].data(), notes[i].size() * sizeof(LevelNote));
         }
         std::string folder = "./levels/";
         if (!std::filesystem::exists(folder))

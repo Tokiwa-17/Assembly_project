@@ -27,7 +27,7 @@ LevelRecord            struct
 currentIndices  dword   GAME_KEY_COUNT      DUP(0)
 tapJudgesCount  dword   NOTE_JUDGE_COUNT    DUP(0)
 catchJudgeCount dword   2                   DUP(0)
-records         dword   GAME_KEY_COUNT * MAX_NOTE_LENGTH      DUP(0)
+records         LevelNoteRecord   GAME_KEY_COUNT * MAX_NOTE_LENGTH      DUP(<>)
 LevelRecord            ends
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -41,7 +41,7 @@ GameKeyCallback                 PROTO       keyCode:byte, down:byte, previousDow
 GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 NoteTapJudgement                PROTO,      index:dword
-GameLevelReset                  PROTO,      levelIndex:dword
+GameLevelReset                  PROTO
 GameDrawNotes                   PROTO,      hDC:dword
 _ProcDlgMain	                PROTO	    hWnd:dword, wMsg:dword, wParam:dword, lParam:dword
 changeQueue                     PROTO,      degree:sword

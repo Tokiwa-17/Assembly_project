@@ -21,6 +21,7 @@ int main()
     LevelBuilderInfo info;
     info.name = "Sheriruth";
     info.author = "Team Grimoire";
+    info.musicPath = "levels/Sheriruth.wav";
     info.difficulty = DIFFICULTY_EXPERT;
     info.offset = 0; // TODO
 
