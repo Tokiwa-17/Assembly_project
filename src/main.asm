@@ -187,7 +187,7 @@ _OnPaint	proc	_hWnd, _hDC
 		invoke	BitBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @bufferDC, 0, 0, SRCCOPY
 		invoke	SelectObject, @bufferDC, @hOldObject
 		invoke	DeleteObject,@bufferBmp
-		invoke	DeleteObject,@bufferDC
+		invoke	DeleteDC,@bufferDC
 		;invoke StretchBlt, _hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,\
 			;@bufferDC, 0, 0, HOME_PAGE_WIDTH, HOME_PAGE_HEIGHT, SRCCOPY
 		popad
