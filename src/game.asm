@@ -23,6 +23,7 @@ include 	game.inc
 include     draw.inc
 include     config.inc
 include     level.inc
+printf          PROTO C :ptr sbyte, :VARARG
 
 extern hInstance:dword
 extern hMainWin:dword
@@ -34,6 +35,7 @@ public globalSpeedLevel
 
 .data
 ;        ///// information /////
+ansMsg	BYTE    "str is %s", 0ah, 0dh, 0  
 globalJudgeLineY      dword   0
 ;        ///// settings /////
 globalSpeedLevel      dword   0
@@ -48,6 +50,7 @@ globalCurrentLevelID  dword   0
 globalPCurLevel       dword   0
 globalLevelState      dword   0
 globalCurLevelMusicID dword   0
+globalSelectDeviceID  dword   0
 globalLevelResetTime  dword   0
 globalLevelBeginTime  dword   0
 globalLevelRecord     LevelRecord       <>  
@@ -58,29 +61,37 @@ _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
 _bg4            dword       0
-_sel_cover0    dword       0
+_sel_cover0     dword       0
 _sel_cover1     dword       0
+_play_cover0    dword       0
+_play_cover1    dword       0
 
 _item1          dword       0
 
 settings        dword       0
 hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
+mci_1           dd          0
+mci_2           dd          0
 blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
-tmp_str            db  0
+score           db          0
+tmp_str         db          0
+
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
 Sheriruth       db  "levels\Sheriruth.level", 0
 musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
-num2str             db  "%d",0
 
+spr             db  "%d"
+num2str         db  "%d",0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 memset proto C :ptr byte, :dword, :dword
+
 strcmp proto C :dword, :dword
 sprintf proto C :ptr byte, :ptr byte, :VARARG
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -234,7 +245,7 @@ NoteTapJudgement endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteCatchJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-NoteCatchJudgement	proc    uses  eax esi ecx,  index, currentTime
+NoteCatchJudgement  proc uses esi ecx, index, currentTime
     local @curIndex
     local @note
     local @record
@@ -353,6 +364,7 @@ GameLevelCalcScore proc uses ebx edx esi
     mul edx
 
     mov esi, globalPCurLevel
+
     mov ebx, (Level ptr [esi]).totalTapCount
     shl ebx, 1
     add ebx, (Level ptr [esi]).totalCatchCount
@@ -362,8 +374,11 @@ GameLevelCalcScore proc uses ebx edx esi
     ret
 GameLevelCalcScore endp
 
-GameInit proc
+GameInit proc uses edi esi edx
     local @hHeap
+
+    mov globalSpeedLevel, 10
+    mov globalJudgeDelay, 0
 
 	invoke	LoadBitmap, hInstance, INIT_PAGE
 	mov		_bg1, 	eax
@@ -377,6 +392,11 @@ GameInit proc
     mov     _sel_cover0, eax
     invoke  LoadBitmap, hInstance, MUSIC_SELECT_1
     mov     _sel_cover1, eax
+    invoke  LoadBitmap, hInstance, PLAY_COVER_0
+    mov     _play_cover0, eax
+    invoke  LoadBitmap, hInstance, PLAY_COVER_1
+    mov     _play_cover1, eax
+
 
     invoke GameLoadNoteAssets
 
@@ -406,6 +426,15 @@ GameInit proc
     mov     byte ptr [esi + 2], al
     mov     al,     'J'
     mov     byte ptr [esi + 3], al
+
+    mov esi, globalLevels
+    invoke AudioOpen, addr (Level ptr [esi]).musicSelectPath
+    mov mci_1, eax
+    mov edx, type Level
+    add esi, edx
+    invoke AudioOpen, addr (Level ptr [esi]).musicSelectPath
+    mov mci_2, eax
+    mov globalSelectDeviceID, eax
 	ret
 GameInit endp
 
@@ -421,9 +450,8 @@ GameShutdown endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameLevelReset
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameLevelReset proc uses eax ecx edx esi edi, levelIndex
-    mov eax, levelIndex
-    mov globalCurrentLevelID, eax
+GameLevelReset proc uses ecx edx esi edi
+    mov eax, globalCurrentLevelID
     mov esi, globalLevels
     mov edx, type Level
     mul edx
@@ -446,28 +474,25 @@ GameLevelReset_L1:
     invoke AudioOpen, addr (Level ptr [esi]).musicPath
     mov globalCurLevelMusicID, eax
     ret
-GameLevelReset      endp
+GameLevelReset endp
 
-GameUpdate proc uses eax ecx edx esi
+GameUpdate proc uses ecx edx esi
 	local	@currentTime
     .if globalCurrentPage == PLAY_PAGE
         .if globalLevelState == GAME_LEVEL_RESET
             invoke timeGetTime
-            mov edx, globalLevelResetTime
-            sub eax, edx
+            sub eax, globalLevelResetTime
             mov edx, GAME_LEVEL_WAIT_TIME
             .if eax >= edx
-                invoke AudioOpen, globalCurLevelMusicID
+                invoke AudioPlay, globalCurLevelMusicID
                 invoke timeGetTime
+                add eax, globalJudgeDelay
                 mov globalLevelBeginTime, eax
-                mov eax, globalJudgeDelay
-                add globalLevelBeginTime, eax
                 mov globalLevelState, GAME_LEVEL_PLAYING
             .endif
         .elseif globalLevelState == GAME_LEVEL_PLAYING
             invoke timeGetTime
-            mov edx, globalLevelBeginTime
-            sub eax, edx
+            sub eax, globalLevelBeginTime
             mov @currentTime, eax
             mov esi, globalPCurLevel
             mov edx, (Level ptr [esi]).totalTime
@@ -588,7 +613,66 @@ GameDraw	proc uses esi ebx, _hDC
             invoke Str_length, [esi + 8]
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
             mov    eax, @hDcPen
-        .elseif globalCurrentPage == PLAY_PAGE
+        .elseif globalCurrentPage == PLAY_PAGE 
+            ;SONGTEXT
+            mov esi, globalPCurLevel
+            invoke Str_length, addr (Level ptr [esi]).musicName
+            invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, addr (Level ptr [esi]).musicName, eax
+            ;MUSICIANTEXT
+            invoke Str_length, addr (Level ptr [esi]).author
+            invoke TextOut, _hDC, MUSICIANTEXT_X, MUSICIANTEXT_Y, addr (Level ptr [esi]).author, eax
+            ;mov esi, offset musicName1
+            ;invoke Str_length, esi
+            ;invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, esi, eax
+            ;SCORETEXT
+            call GameLevelCalcScore 
+            mov ebx, eax
+            mov esi, offset score ;这一行原因未知，似乎esi只是需要类似的初始化
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, SCORETEXT_X, SCORETEXT_Y, esi, eax
+            ;PERFECTTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi]
+            add ebx, [esi+4]
+            add ebx, [esi+8]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, PERFECTTEXT_X, PERFECTTEXT_Y, esi, eax
+            ;GREATTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+12]
+            add ebx, [esi+16]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, GREATTEXT_X, GREATTEXT_Y, esi, eax
+            ;MISSTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+20]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi+4]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, MISSTEXT_X, MISSTEXT_Y, esi, eax
+            ;COVER
+            invoke	CreateCompatibleDC, _hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
+		    mov		@hDcBack, eax
+            .if     globalCurrentLevelID == 0
+                invoke SelectObject, @hDcBack, _play_cover0
+                invoke BitBlt, _hDC, PLAY_COVER_X, PLAY_COVER_Y, \
+                    PLAY_COVER_WIDTH, PLAY_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .elseif globalCurrentLevelID == 1
+                invoke SelectObject, @hDcBack, _play_cover1
+                invoke BitBlt, _hDC, PLAY_COVER_X, PLAY_COVER_Y, \
+                    PLAY_COVER_WIDTH, PLAY_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .endif
+            invoke SelectObject, @hDcBack, @hOldObject
+		    invoke DeleteDC, @hDcBack
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
             .endif
@@ -705,6 +789,7 @@ GameDrawNotes proc hDC: dword
     local @pTheNote: ptr LevelNote
     local @i: dword
     invoke timeGetTime
+    sub eax, globalLevelBeginTime
     mov @currentTime, eax
     mov @keyi, 0
     mov esi, offset globalLevelRecord
@@ -815,6 +900,7 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
             .endif
         .elseif keyCode == 'J'
             mov globalCurrentPage, SELECT_PAGE
+            invoke AudioPlay, globalSelectDeviceID
         ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
         .elseif keyCode == 'F'
             mov globalCurrentPage, RESULT_PAGE
@@ -824,6 +910,8 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     .elseif globalCurrentPage == SELECT_PAGE
         .if keyCode == 'H'
             mov globalCurrentPage, PLAY_PAGE
+            invoke AudioStop, globalSelectDeviceID
+            invoke GameLevelReset
         .endif 
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
@@ -860,7 +948,7 @@ GameKeyCallback_L2:
                 mov esi, offset globalKeyPressing
                 mov eax, @index
                 add esi, eax
-                mov byte ptr[esi], 0
+                mov byte ptr [esi], 0
                 invoke timeGetTime
                 sub eax, globalLevelBeginTime
                 invoke NoteCatchJudgement, @index, eax
@@ -953,6 +1041,7 @@ _ProcDlgMain	endp
 ; changeQueue
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 changeQueue     proc	uses ebx edi esi ecx edx, degree:sword
+        local @mci_1, @mci_2
         .if globalCurrentPage != SELECT_PAGE
             ret
         .endif
@@ -1017,8 +1106,24 @@ changeQueue_L2:
         .endif
         mov globalCurrentLevelID, eax
         div globalLevelCount
-        mov globalCurLevelMusicID, edx 
+        mov globalCurrentLevelID, edx 
 
+        .if globalCurrentLevelID == 2
+            invoke AudioStop, globalSelectDeviceID
+            ;mov globalSelectDeviceID, 0
+            jmp changeQueue_L3
+        .endif 
+        invoke AudioStop, globalSelectDeviceID
+        .if globalCurrentLevelID == 0
+            invoke AudioPlay, mci_1
+            mov eax, mci_1
+            mov globalSelectDeviceID, eax
+        .elseif globalCurrentLevelID == 1
+            invoke AudioPlay, mci_2
+            mov eax, mci_2
+            mov globalSelectDeviceID, eax
+        .endif
+changeQueue_L3:
         ret
 changeQueue     endp
 end
