@@ -72,7 +72,8 @@ musicNameList   dd          QUEUE_LENGTH        DUP(0)
 mci_1           dd          0
 mci_2           dd          0
 blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
-tmp_str            db  0
+score           db          0
+tmp_str         db          0
 
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
@@ -81,7 +82,8 @@ musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
 
-num2str             db  "%d",0
+spr             db  "%d"
+num2str         db  "%d",0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
