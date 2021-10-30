@@ -22,9 +22,10 @@ RESULT_PAGE     equ     103
 
 TAP_EFFECT      equ     200
 CATCH_EFFECT    equ     201
-MUSIC_SELECT_0   equ    105
-MUSIC_SELECT_1   equ    106
-
+MUSIC_SELECT_0  equ    105
+MUSIC_SELECT_1  equ    106
+PLAY_COVER_0    equ    107
+PLAY_COVER_1    equ    108
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -66,26 +67,30 @@ SELECT_COVER_HEIGHT  equ    512
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; PLAY_PAGE
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-SONGTEXT_X equ 14
-SONGTEXT_Y equ 317
-MUSICIANTEXT_X equ 14
-MUSICIANTEXT_Y equ 398
-SCORETEXT_X equ 1010
-SCORETEXT_Y equ 68
-PERFECTTEXT_X equ 1160
-PERFECTTEXT_Y equ 730
-GREATTEXT_X equ 1160
-GREATTEXT_Y equ 810
-MISSTEXT_X equ 1160
-MISSTEXT_Y equ 890
-TRACT0_X equ 257
-TRACT1_X equ 437
-TRACT2_X equ 617
-TRACT3_X equ 797
-TRACT4_X equ 979
-TRACT_TOP_Y equ 0
-TRACT_BOTTOM_Y equ WINDOW_HEIGHT
-JUDGELINE_Y equ 800
+SONGTEXT_X      equ     14
+SONGTEXT_Y      equ     317
+MUSICIANTEXT_X  equ     14
+MUSICIANTEXT_Y  equ     398
+SCORETEXT_X     equ     1010
+SCORETEXT_Y     equ     68
+PERFECTTEXT_X   equ     1160
+PERFECTTEXT_Y   equ     730
+GREATTEXT_X     equ     1160
+GREATTEXT_Y     equ     810
+MISSTEXT_X      equ     1160
+MISSTEXT_Y      equ     890
+TRACT0_X        equ     257
+TRACT1_X        equ     437
+TRACT2_X        equ     617
+TRACT3_X        equ     797
+TRACT4_X        equ     979
+TRACT_TOP_Y     equ     0
+TRACT_BOTTOM_Y  equ     WINDOW_HEIGHT
+JUDGELINE_Y     equ     800
+PLAY_COVER_X    equ     0
+PLAY_COVER_Y    equ     0
+PLAY_COVER_WIDTH    equ     256
+PLAY_COVER_HEIGHT   equ     256
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; RESULT_PAGE
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

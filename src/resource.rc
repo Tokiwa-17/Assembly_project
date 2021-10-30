@@ -13,6 +13,8 @@
 
 #define MUSIC_SELECT_0  105
 #define MUSIC_SELECT_1  106
+#define PLAY_COVER_0    107
+#define PLAY_COVER_1    108
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ICO_GAME	ICON		"Game.ico"
 INIT_PAGE   BITMAP      "init_bg.bmp"
@@ -26,3 +28,5 @@ CATCH_EFFECT  BITMAP      "catch_effect.bmp"
 MUSIC_SELECT_0   BITMAP "Cyaegha_select.bmp"
 MUSIC_SELECT_1   BITMAP "Sheriruth_select.bmp"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PLAY_COVER_0     BITMAP "Cyaegha_play.bmp"
+PLAY_COVER_1     BITMAP "Sheriruth_play.bmp"
