@@ -23,6 +23,7 @@ include 	game.inc
 include     draw.inc
 include     config.inc
 include     level.inc
+printf          PROTO C :ptr sbyte, :VARARG
 
 extern hInstance:dword
 extern hMainWin:dword
@@ -34,6 +35,7 @@ public globalSpeedLevel
 
 .data
 ;        ///// information /////
+ansMsg	BYTE    "str is %s", 0ah, 0dh, 0  
 globalJudgeLineY      dword   0
 ;        ///// settings /////
 globalSpeedLevel      dword   0
@@ -70,12 +72,14 @@ musicNameList   dd          QUEUE_LENGTH        DUP(0)
 mci_1           dd          0
 mci_2           dd          0
 blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
+score           db  0
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
 Sheriruth       db  "levels\Sheriruth.level", 0
 musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
+spr             db  "%d"
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -356,10 +360,7 @@ GameLevelCalcScore proc uses ebx edx esi
     mov esi, globalPCurLevel
     mov edx, (Level ptr [esi]).totalTapCount
     shl edx, 1
-    mov ebx, edx
-    mov edx, (Level ptr [esi]).totalCatchCount
-    add ebx, edx
-
+    add ebx, (Level ptr [esi]).totalCatchCount
     div ebx
     mov esi, offset globalLevelRecord.tapJudgesCount
     add eax, [esi]
@@ -601,6 +602,51 @@ GameDraw	proc uses esi ebx, _hDC
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
             mov    eax, @hDcPen
         .elseif globalCurrentPage == PLAY_PAGE 
+            ;SONGTEXT
+            mov esi, globalPCurLevel
+            invoke Str_length, addr (Level ptr [esi]).musicName
+            invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, addr (Level ptr [esi]).musicName, eax
+            ;MUSICIANTEXT
+            invoke Str_length, addr (Level ptr [esi]).author
+            invoke TextOut, _hDC, MUSICIANTEXT_X, MUSICIANTEXT_Y, addr (Level ptr [esi]).author, eax
+            ;mov esi, offset musicName1
+            ;invoke Str_length, esi
+            ;invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, esi, eax
+            ;SCORETEXT
+            call GameLevelCalcScore 
+            mov ebx, eax
+            mov esi, offset score ;这一行原因未知，似乎esi只是需要类似的初始化
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, SCORETEXT_X, SCORETEXT_Y, esi, eax
+            ;PERFECTTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi]
+            add ebx, [esi+4]
+            add ebx, [esi+8]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, PERFECTTEXT_X, PERFECTTEXT_Y, esi, eax
+            ;GREATTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+12]
+            add ebx, [esi+16]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, GREATTEXT_X, GREATTEXT_Y, esi, eax
+            ;MISSTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+20]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi+4]
+            mov esi, offset score
+            invoke sprintf, esi, addr spr, ebx
+            invoke Str_length, esi
+            invoke TextOut, _hDC, MISSTEXT_X, MISSTEXT_Y, esi, eax
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
             .endif
