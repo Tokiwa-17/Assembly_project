@@ -67,19 +67,22 @@ settings        dword       0
 hEvent          dd          0
 musicNameList   dd          QUEUE_LENGTH        DUP(0)
 blendFunction   BLENDFUNCTION   <AC_SRC_OVER, 0, 0, AC_SRC_ALPHA>
+tmp_str            db  0
 .const
 Cyaegha         db  "levels\Cyaegha.level", 0
 Sheriruth       db  "levels\Sheriruth.level", 0
 musicName1      db  "Cyaegha", 0
 musicName2      db  "Sheriruth", 0
 musicName3      db  "TODO", 0
+num2str             db  "%d",0
+
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 代码段
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 memset proto C :ptr byte, :dword, :dword
 strcmp proto C :dword, :dword
-
+sprintf proto C :ptr byte, :ptr byte, :VARARG
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteTapJudgement
@@ -350,12 +353,9 @@ GameLevelCalcScore proc uses ebx edx esi
     mul edx
 
     mov esi, globalPCurLevel
-    mov edx, (Level ptr [esi]).totalTapCount
-    shl edx, 1
-    mov ebx, edx
-    mov edx, (Level ptr [esi]).totalCatchCount
-    add ebx, edx
-
+    mov ebx, (Level ptr [esi]).totalTapCount
+    shl ebx, 1
+    add ebx, (Level ptr [esi]).totalCatchCount
     div ebx
     mov esi, offset globalLevelRecord.tapJudgesCount
     add eax, [esi]
@@ -606,6 +606,85 @@ GameDraw	proc uses esi ebx, _hDC
             .endif
             invoke SelectObject, @hDcBack, @hOldObject
 		    invoke DeleteDC, @hDcBack
+            invoke SelectObject, @hDcBack, @hOldObject
+		    invoke DeleteDC, @hDcBack
+            invoke SetBkMode, _hDC, TRANSPARENT
+            mov    ebx, 255
+            invoke obtainRGB, ebx, ebx, ebx
+            invoke SetTextColor, _hDC, eax
+            ;TAP_CRITICAL_PERFECT
+            mov edx, globalLevelRecord.tapJudgesCount[0]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_CRITICAL_PERFECT_Y, esi, eax
+            ;TAP_PERFECT
+            mov edx, globalLevelRecord.tapJudgesCount[4]
+            add edi, globalLevelRecord.tapJudgesCount[8]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_PERFECT_Y, esi, eax
+            ;TAP_PERFECT_EARLY
+            mov edx, globalLevelRecord.tapJudgesCount[4]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_PERFECT_EARLY_Y, esi, eax
+            ;TAP_PERFECT_LATE_Y
+            mov edx, globalLevelRecord.tapJudgesCount[8]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_PERFECT_LATE_Y, esi, eax
+            ;TAP_GREAT
+            mov edx, globalLevelRecord.tapJudgesCount[12]
+            add edi, globalLevelRecord.tapJudgesCount[16]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_GREAT_Y, esi, eax
+            ;TAP_GREAT_EARLY
+            mov edx, globalLevelRecord.tapJudgesCount[12]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_GREAT_EARLY_Y, esi, eax
+            ;TAP_GREAT_LATE
+            mov edx, globalLevelRecord.tapJudgesCount[16]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_GREAT_LATE_Y, esi, eax
+            ;TAP_MISS
+            mov edx, globalLevelRecord.tapJudgesCount[20]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, TAP_MISS_Y, esi, eax
+            ;CATCH_CRITICAL_PERFECT
+            mov edx, globalLevelRecord.catchJudgeCount[0]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, CATCH_CRITICAL_PERFECT_Y, esi, eax
+            ;CATCH_MISS
+            mov edx, globalLevelRecord.catchJudgeCount[4]
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+            invoke TextOut,   _hDC, RECORD_X, CATCH_MISS_Y, esi, eax
+            
+            ;TODO: 调用分数计算函数会闪退，暂未解决
+            ; call GameLevelCalcScore
+            mov edx, eax
+            mov esi, offset tmp_str
+            invoke sprintf, esi , offset num2str, edx
+            invoke Str_length, esi
+
+            invoke TextOut,   _hDC, SCORE_X, SCORE_Y, esi, eax
+
+            mov    eax, @hDcPen
         .endif
 		ret
 GameDraw	endp
