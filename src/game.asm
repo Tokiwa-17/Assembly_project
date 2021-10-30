@@ -61,8 +61,10 @@ _bg1            dword       0
 _bg2            dword       0
 _bg3            dword       0
 _bg4            dword       0
-_sel_cover0    dword       0
+_sel_cover0     dword       0
 _sel_cover1     dword       0
+_play_cover0    dword       0
+_play_cover1    dword       0
 
 _item1          dword       0
 
@@ -390,6 +392,11 @@ GameInit proc uses edi esi edx
     mov     _sel_cover0, eax
     invoke  LoadBitmap, hInstance, MUSIC_SELECT_1
     mov     _sel_cover1, eax
+    invoke  LoadBitmap, hInstance, PLAY_COVER_0
+    mov     _play_cover0, eax
+    invoke  LoadBitmap, hInstance, PLAY_COVER_1
+    mov     _play_cover1, eax
+
 
     invoke GameLoadNoteAssets
 
@@ -652,6 +659,20 @@ GameDraw	proc uses esi ebx, _hDC
             invoke sprintf, esi, addr spr, ebx
             invoke Str_length, esi
             invoke TextOut, _hDC, MISSTEXT_X, MISSTEXT_Y, esi, eax
+            ;COVER
+            invoke	CreateCompatibleDC, _hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
+		    mov		@hDcBack, eax
+            .if     globalCurrentLevelID == 0
+                invoke SelectObject, @hDcBack, _play_cover0
+                invoke BitBlt, _hDC, PLAY_COVER_X, PLAY_COVER_Y, \
+                    PLAY_COVER_WIDTH, PLAY_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .elseif globalCurrentLevelID == 1
+                invoke SelectObject, @hDcBack, _play_cover1
+                invoke BitBlt, _hDC, PLAY_COVER_X, PLAY_COVER_Y, \
+                    PLAY_COVER_WIDTH, PLAY_COVER_HEIGHT, @hDcBack, 0, 0, SRCCOPY
+            .endif
+            invoke SelectObject, @hDcBack, @hOldObject
+		    invoke DeleteDC, @hDcBack
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
             .endif
