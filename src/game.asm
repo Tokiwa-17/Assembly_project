@@ -676,12 +676,15 @@ GameDraw	proc uses esi ebx, _hDC
             invoke TextOut,   _hDC, RECORD_X, CATCH_MISS_Y, esi, eax
             
             ;TODO: 调用分数计算函数会闪退，暂未解决
+            mov    ebx, 0
+            invoke obtainRGB, ebx, ebx, ebx
+            invoke SetTextColor, _hDC, eax
+
             ; call GameLevelCalcScore
-            mov edx, eax
+            mov edx, 415411
             mov esi, offset tmp_str
             invoke sprintf, esi , offset num2str, edx
             invoke Str_length, esi
-
             invoke TextOut,   _hDC, SCORE_X, SCORE_Y, esi, eax
 
             mov    eax, @hDcPen
