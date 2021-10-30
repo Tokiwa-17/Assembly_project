@@ -42,10 +42,12 @@ AnimationInit proc uses edx edi, image: dword, rows: dword, columns: dword, pCli
     mov (AnimationClip ptr [edi]).columns, eax
     invoke GetObject, image, type BITMAP, addr @bmpInfo
     mov eax, @bmpInfo.bmWidth
+    mov edx, 0
     div columns
     mov edi, pClip
     mov (AnimationClip ptr [edi]).frameWidth, eax
     mov eax, @bmpInfo.bmHeight
+    mov edx, 0
     div rows
     mov (AnimationClip ptr [edi]).frameHeight, eax
     ret
@@ -89,9 +91,12 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     .endif
 
     mov eax, animTime
+    mov edx, 0
     div (AnimationClip ptr [esi]).interval
-    div (AnimationClip ptr [edi]).columns
+    mov edx, 0
+    div (AnimationClip ptr [esi]).columns
     mov @srcX, edx; column
+    mov edx, 0
     div (AnimationClip ptr [esi]).rows
     mov eax, edx; row
     mul (AnimationClip ptr [esi]).frameHeight
@@ -112,8 +117,8 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     mov esi, @anim
     mov eax, (AnimationClip ptr [esi]).frameHeight
     mul edx
-    mov edx, (AnimationClip ptr [esi]).frameWidth
-    div edx
+    mov edx, 0
+    div (AnimationClip ptr [esi]).frameWidth
     mov @dstH, eax
     mov edx, JUDGELINE_Y
     shr eax, 1
