@@ -81,9 +81,9 @@ musicName3      db  "TODO", 0
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 .code
 memset proto C :ptr byte, :dword, :dword
+sprintf proto C :ptr byte, :ptr byte, :dword
 strcmp proto C :ptr sbyte, :ptr sbyte
 strlen proto C :ptr sbyte
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteTapJudgement
@@ -600,7 +600,45 @@ GameDraw	proc uses esi ebx, _hDC
             invoke Str_length, [esi + 8]
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
             mov    eax, @hDcPen
-        .elseif globalCurrentPage == PLAY_PAGE
+        .elseif globalCurrentPage == PLAY_PAGE 
+            ;SONGTEXT
+            mov esi, globalPCurLevel
+            invoke Str_length, (Level ptr [esi]).musicName
+            invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, (Level ptr [esi]).musicName, eax
+             ;MUSICIANTEXT
+            invoke Str_length, (Level ptr [esi]).author
+            invoke TextOut, _hDC, MUSICIANTEXT_X, MUSICIANTEXT_Y, (Level ptr [esi]).author, eax
+            ;SCORETEXT
+            call GameLevelCalcScore 
+            mov ebx, eax
+            invoke sprintf, esi, "%d", ebx
+            invoke Str_length, [esi]
+            invoke TextOut, _hDC, SCORETEXT_X, SCORETEXT_Y, [esi], eax
+            ;PERFECTTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi]
+            add ebx, [esi+4]
+            add ebx, [esi+8]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi]
+            invoke sprintf, esi, "%d", ebx
+            invoke Str_length, [esi]
+            invoke TextOut, _hDC, PERFECTTEXT_X, PERFECTTEXT_Y, [esi], eax
+            ;GREATTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+12]
+            add ebx, [esi+16]
+            invoke sprintf, esi, "%d", ebx
+            invoke Str_length, [esi]
+            invoke TextOut, _hDC, GREATTEXT_X, GREATTEXT_Y, [esi], eax
+            ;MISSTEXT
+            mov esi, offset globalLevelRecord.tapJudgesCount
+            mov ebx, [esi+20]
+            mov esi, offset globalLevelRecord.catchJudgeCount
+            add ebx, [esi+4]
+            invoke sprintf, esi, "%d", ebx
+            invoke Str_length, [esi]
+            invoke TextOut, _hDC, MISSTEXT_X, MISSTEXT_Y, [esi], eax
             .if globalLevelState == GAME_LEVEL_PLAYING
                 invoke GameDrawNotes, _hDC
             .endif
