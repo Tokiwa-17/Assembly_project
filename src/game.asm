@@ -584,6 +584,7 @@ GameDraw	proc uses esi ebx, _hDC
             invoke TextOut,   _hDC, TEXTOUT3_X, TEXTOUT3_Y, [esi + 8], eax
             mov    eax, @hDcPen
         .elseif globalCurrentPage == PLAY_PAGE 
+            invoke SetBkMode, _hDC, TRANSPARENT
             ;SONGTEXT
             mov esi, globalPCurLevel
             invoke Str_length, addr (Level ptr [esi]).musicName
@@ -595,7 +596,6 @@ GameDraw	proc uses esi ebx, _hDC
             ;invoke Str_length, esi
             ;invoke TextOut, _hDC, SONGTEXT_X, SONGTEXT_Y, esi, eax
             ;SCORETEXT
-            invoke SetBkMode, _hDC, TRANSPARENT
             invoke GameLevelCalcScore
             mov ebx, eax
             invoke sprintf, offset tmp_str, offset scoreFmt, ebx
