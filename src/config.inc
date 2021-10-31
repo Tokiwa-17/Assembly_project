@@ -4,9 +4,8 @@ __config_inc_ equ <1>
 ; EQU 等值段
 WINDOW_HEIGHT 			equ 	960
 WINDOW_WIDTH  			equ		1280
-ID_TIMER				equ		1
 TIMER_MAIN_INTERVAL		equ		16
-GAME_LEVEL_WAIT_TIME     equ     1000
+GAME_LEVEL_WAIT_TIME     equ     1500
 
 TAP_NOTE_HEIGHT   equ 50
 CATCH_NOTE_HEIGHT equ 50
@@ -22,6 +21,8 @@ RESULT_PAGE     equ     103
 
 TAP_EFFECT      equ     200
 CATCH_EFFECT    equ     201
+TAP_SOUND_EFFECT equ    202
+
 MUSIC_SELECT_0  equ    105
 MUSIC_SELECT_1  equ    106
 PLAY_COVER_0    equ    107

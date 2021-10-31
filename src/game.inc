@@ -42,6 +42,7 @@ GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
 NoteTapJudgement                PROTO,      index:dword
 GameLevelReset                  PROTO
+GameUpdateJudgements            PROTO
 GameDrawNotes                   PROTO,      hDC:dword
 _ProcDlgMain	                PROTO	    hWnd:dword, wMsg:dword, wParam:dword, lParam:dword
 changeQueue                     PROTO,      degree:sword
