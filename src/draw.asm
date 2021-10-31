@@ -13,10 +13,13 @@ include 	winmm.inc
 includelib	winmm.lib
 include     msimg32.inc
 includelib  msimg32.lib
+includelib msvcrt.lib
 
 include draw.inc
 include config.inc
 include game.inc
+
+printf proto C, :ptr sbyte, :vararg
 
 extern hInstance: dword
 extern globalSpeedLevel: dword
@@ -29,6 +32,7 @@ animCatchEffect AnimationClip <>
 
 .const
 tractXarr dword TRACT0_X, TRACT1_X, TRACT2_X, TRACT3_X, TRACT4_X
+alphaBlendErrorFmt db "AlphaBlend error code is %lu", 0ah, 0dh, 0
 
 .code
 AnimationInit proc uses edx edi, image: dword, rows: dword, columns: dword, pClip: ptr AnimationClip
@@ -42,10 +46,12 @@ AnimationInit proc uses edx edi, image: dword, rows: dword, columns: dword, pCli
     mov (AnimationClip ptr [edi]).columns, eax
     invoke GetObject, image, type BITMAP, addr @bmpInfo
     mov eax, @bmpInfo.bmWidth
+    mov edx, 0
     div columns
     mov edi, pClip
     mov (AnimationClip ptr [edi]).frameWidth, eax
     mov eax, @bmpInfo.bmHeight
+    mov edx, 0
     div rows
     mov (AnimationClip ptr [edi]).frameHeight, eax
     ret
@@ -70,8 +76,8 @@ GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dwo
     local @srcX: dword
     local @srcY: dword
     local @hBmpDC: dword
+    local @hTrBmpDC: dword
     local @hOldObject: dword
-    local @blendFn: BLENDFUNCTION
 
     mov eax, noteType
     .if eax == NOTE_TAP
@@ -127,15 +133,11 @@ GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dwo
     invoke CreateCompatibleDC, hDC
     mov @hBmpDC, eax
     mov esi, @anim
-    mov edx, (AnimationClip ptr [esi]).image
-    invoke SelectObject, @hBmpDC, edx
+    invoke SelectObject, @hBmpDC, (AnimationClip ptr [esi]).image
     mov @hOldObject, eax
-    mov @blendFn.BlendOp, AC_SRC_OVER
-    mov @blendFn.BlendFlags, 0
-    mov @blendFn.SourceConstantAlpha, 255
-    mov @blendFn.AlphaFormat, AC_SRC_ALPHA
-    invoke AlphaBlend, hDC, @dstX, @dstY, @dstW, @dstH, @hBmpDC, @srcX, @srcY, \
-        (AnimationClip ptr [esi]).frameWidth, (AnimationClip ptr [esi]).frameHeight, addr @blendFn
+    mov esi, @anim
+    invoke TransparentBlt, hDC, @dstX, @dstY, @dstW, @dstH, @hBmpDC, @srcX, @srcY, \
+        (AnimationClip ptr [esi]).frameWidth, (AnimationClip ptr [esi]).frameHeight, 00000000h
     invoke SelectObject, @hBmpDC, @hOldObject
     invoke DeleteDC, @hBmpDC
     mov eax, 1
