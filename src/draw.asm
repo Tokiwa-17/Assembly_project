@@ -61,7 +61,7 @@ GameLoadNoteAssets proc
     ret
 GameLoadNoteAssets endp
 
-GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, animTime: dword
+GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dword, animTime: dword
     local @anim: ptr AnimationClip
     local @dstX: dword
     local @dstY: dword
@@ -89,9 +89,12 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     .endif
 
     mov eax, animTime
+    mov edx, 0
     div (AnimationClip ptr [esi]).interval
-    div (AnimationClip ptr [edi]).columns
+    mov edx, 0
+    div (AnimationClip ptr [esi]).columns
     mov @srcX, edx; column
+    mov edx, 0
     div (AnimationClip ptr [esi]).rows
     mov eax, edx; row
     mul (AnimationClip ptr [esi]).frameHeight
@@ -112,8 +115,9 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     mov esi, @anim
     mov eax, (AnimationClip ptr [esi]).frameHeight
     mul edx
-    mov edx, (AnimationClip ptr [esi]).frameWidth
-    div edx
+    mov ebx, (AnimationClip ptr [esi]).frameWidth
+    mov edx, 0
+    div ebx
     mov @dstH, eax
     mov edx, JUDGELINE_Y
     shr eax, 1
