@@ -27,6 +27,7 @@ hMainWin	dword		?
 .data
 rotateDistance  sword		 0
 mousewheelwParam  sdword       0
+mainTimerID dword ?
 .const
 szClassName		db	'MUG GAME', 0
 szCaptionMain	db	'MUG', 0
@@ -38,19 +39,27 @@ szCaptionMain	db	'MUG', 0
 ; 函数声明
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _OnPaint						PROTO,		_hWnd:dword, _hDC:dword
-_ProcessTimer					PROTO, 		hWnd:dword, wParam:dword
+
+TimeEventProc proc uTimerID: dword, uMsg: dword, dwUser: dword, dw1: dword, dw2: dword
+	mov eax, uTimerID
+	.if eax == mainTimerID
+		invoke InvalidateRect, hMainWin, NULL, FALSE
+	.endif
+	ret
+TimeEventProc endp
+
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; 窗口过程
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 		local	@stPs:PAINTSTRUCT
-		local	@stRect:RECT
 		local	@hDc
 		local	@key:byte, @down:byte, @previousDown:byte
 
 		mov	eax,uMsg
 ;********************************************************************
 		.if	eax ==	WM_PAINT
+			invoke  GameUpdate
 			invoke	BeginPaint, hWnd, addr @stPs
 			mov		@hDc, eax
 			invoke 	_OnPaint, hWnd, @hDc
@@ -60,8 +69,8 @@ _ProcWinMain	proc	uses ebx edi esi, hWnd, uMsg, wParam, lParam
 ;		or CreateWindow function.
 		.elseif eax == WM_CREATE
 			invoke GameInit
-			;Set Timer
-			invoke	SetTimer, hWnd, ID_TIMER, TIMER_MAIN_INTERVAL, NULL
+			invoke timeSetEvent, TIMER_MAIN_INTERVAL, 1, offset TimeEventProc, 0, TIME_PERIODIC
+			mov mainTimerID, eax
 ;********************************************************************
 
 		.elseif eax == WM_KEYDOWN
@@ -84,9 +93,6 @@ PreviousDownFlag:
 			mov @previousDown, 1
 			invoke GameKeyCallback, @key, @down, @previousDown
 ;********************************************************************
-		.elseif eax == WM_TIMER
-			invoke _ProcessTimer, hWnd, wParam
-;********************************************************************
 		.elseif eax == WM_MOUSEWHEEL
 			;.if globalCurrentPage == SELECT_PAGE
 			mov eax, wParam
@@ -98,7 +104,7 @@ PreviousDownFlag:
 			invoke changeQueue, rotateDistance  
 ;********************************************************************
 		.elseif	eax ==	WM_CLOSE
-			invoke	KillTimer, hWnd, ID_TIMER
+			invoke	timeKillEvent, mainTimerID
 			invoke	PostQuitMessage, NULL
 ;********************************************************************
 		.else
@@ -193,16 +199,6 @@ _OnPaint	proc	_hWnd, _hDC
 		popad
 		ret
 _OnPaint endp
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-_ProcessTimer	proc	_hWnd, timerId
-		.if timerId == ID_TIMER
-			invoke	GameUpdate
-			invoke	InvalidateRect, _hWnd, NULL, FALSE
-		.else
-			ret
-		.endif
-		ret
-_ProcessTimer	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 start:
 		call	_WinMain

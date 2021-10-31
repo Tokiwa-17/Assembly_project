@@ -3,6 +3,8 @@
 option casemap:none
 
 include windows.inc
+include kernel32.inc 
+include user32.inc 
 include winmm.inc
 
 includelib msvcrt.lib
@@ -10,7 +12,11 @@ includelib kernel32.lib
 includelib user32.lib
 includelib winmm.lib
 
+include audio.inc
+
 printf proto C, :ptr sbyte, :vararg
+
+extern hInstance: dword
 
 .const
 waveaudio db "waveaudio", 0
@@ -23,6 +29,7 @@ AudioOpen proc filePath: ptr sbyte
     local @openParams:MCI_OPEN_PARMS
     local @errBuffer[256]:sbyte
     local @errCode:dword
+    local @setParams: MCI_SET_PARMS
     mov @openParams.lpstrDeviceType, offset waveaudio
     mov eax, filePath
     mov @openParams.lpstrElementName, eax
@@ -36,15 +43,21 @@ AudioOpen proc filePath: ptr sbyte
             invoke printf, offset mciOpenErrorPrompt, filePath, addr @errBuffer
         .endif
     .endif
+    mov @setParams.dwTimeFormat, MCI_FORMAT_MILLISECONDS
+    invoke mciSendCommand, @openParams.wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, addr @setParams
     mov eax, @openParams.wDeviceID
     ret
 AudioOpen endp
 
-AudioPlay proc wDeviceID: dword
+AudioPlay proc wDeviceID: dword, dwFrom: dword
     local @playParams:MCI_PLAY_PARMS
     local @errBuffer[256]:sbyte
     local @errCode:dword
-    mov @playParams.dwFrom, 0
+    mov eax, dwFrom
+    .if eax >= 80000000h
+        mov eax, 0
+    .endif
+    mov @playParams.dwFrom, eax
     invoke mciSendCommand, wDeviceID, MCI_PLAY, MCI_FROM, addr @playParams
     .if eax != 0
         mov @errCode, eax
@@ -62,5 +75,31 @@ AudioStop proc wDeviceID: dword
     invoke mciSendCommand, wDeviceID, MCI_STOP, 0, 0
     ret
 AudioStop endp
+
+AudioOpenResource proc uses esi, resID :dword
+    local @hResSrc: HRSRC
+    local @hRes: HGLOBAL
+    local @hFile: dword
+    local @filePath[MAX_PATH]: sbyte
+    local @filePathName[MAX_PATH]: sbyte
+    local @sz: dword
+
+    invoke FindResource, hInstance, resID, RT_RCDATA
+    mov @hResSrc, eax
+    invoke LoadResource, hInstance, eax
+    mov @hRes, eax
+    invoke GetTempPath, MAX_PATH, addr @filePath
+    invoke GetTempFileName, addr @filePath, offset waveaudio, 0, addr @filePathName
+    invoke CreateFile, addr @filePathName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+    mov @hFile, eax
+    invoke SizeofResource, hInstance, @hResSrc
+    mov @sz, eax
+    invoke LockResource, @hRes
+    mov esi, eax
+    invoke WriteFile, @hFile, esi, @sz, NULL, NULL
+    invoke CloseHandle, @hFile
+    invoke AudioOpen, addr @filePathName
+    ret
+AudioOpenResource endp
 
 end

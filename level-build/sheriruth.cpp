@@ -30,7 +30,7 @@ int main()
     auto lb = LevelBuilder(info, 185.0f);
     // 1 = 4/4
 sec_1:
-    rep(4) lb.AddTime(4);
+    rep(4) lb.AddTime(1);
 sec_2:
     lb.Add(8, {1, 'o'}, {3, 'o'});
     rep(2) lb.Add(8, {3, 'o'});
