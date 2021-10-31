@@ -99,19 +99,11 @@ sprintf proto C :ptr byte, :ptr byte, :VARARG
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteTapJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-NoteTapJudgement proc  uses  esi ecx,  index
+NoteTapJudgement proc  uses ecx edx esi edi, index: dword, judgeTime: dword
     local @noteCount: dword
-    local @judgeTime: dword
     local @curIndex: dword
     local @note: ptr LevelNote
     local @record: ptr LevelNoteRecord
-
-    mov esi, offset globalKeyPressTime
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-    mov eax, [esi]
-    mov @judgeTime, eax
 
     mov esi, globalPCurLevel
     add esi, type Level
@@ -130,11 +122,6 @@ NoteTapJudgement proc  uses  esi ecx,  index
     mov eax, [esi]
     mov @curIndex, eax
 
-NoteTapJudgement_beginWhile:
-    mov eax, @noteCount
-    cmp eax, @curIndex
-    jna NoteTapJudgement_endWhile
-
     ; (globalPCurLevel)->notes[index][curIndex]
     mov eax, GAME_KEY_COUNT
     sub eax, index
@@ -148,91 +135,70 @@ NoteTapJudgement_beginWhile:
     sub esi, eax
     mov @note, esi
     ; LevelNoteRecord *record = &globalLevelRecord.records[index][curIndex]
-    mov esi, offset globalLevelRecord
-    add esi, type LevelRecord
-    sub esi, eax
-    mov @record, esi
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;  (note->type == NOTE_CATCH)
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @note
+    mov edi, offset globalLevelRecord
+    add edi, type LevelRecord
+    sub edi, eax
+    mov @record, edi
+
+NoteTapJudgement_beginWhile:
+    mov eax, @noteCount
+    cmp eax, @curIndex
+    jna NoteTapJudgement_endWhile
+
+    ; (note->type == NOTE_CATCH) => break
     mov eax, (LevelNote PTR [esi]).NoteType
-    mov esi, NOTE_CATCH
-    cmp eax, esi
+    mov edx, NOTE_CATCH
+    cmp eax, edx
     je  NoteTapJudgement_endWhile
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   Time diff = judgeTime - note->time;
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @note
-    mov eax, @judgeTime
+    ; Time diff = judgeTime - note->time;
+    mov eax, judgeTime
     sub eax, (LevelNote ptr [esi]).Time
     ; if (diff <= 0)
     .IF eax >= 80000000h
         neg eax; -diff >= 0
         .IF eax <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_CRITICAL_PERFECT
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
         .ELSEIF eax <= NOTE_JUDGE_PERFECT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_PERFECT_EARLY
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_PERFECT_EARLY
         .ELSEIF eax <= NOTE_JUDGE_GREAT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_GREAT_EARLY
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_GREAT_EARLY
         .ELSE
             jmp NoteTapJudgement_endWhile
         .ENDIF
     .ELSE
         .IF eax <= NOTE_JUDGE_CRITICAL_PERFECT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_CRITICAL_PERFECT
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
         .ELSEIF eax <= NOTE_JUDGE_PERFECT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_PERFECT_LATE
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_PERFECT_LATE
         .ELSEIF eax <= NOTE_JUDGE_GREAT_LIMIT
-            mov esi, @record
-            mov eax, NOTE_JUDGE_GREAT_LATE
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_GREAT_LATE
         .ELSE
-            mov esi, @record
-            mov eax, NOTE_JUDGE_MISS
-            mov (LevelNoteRecord PTR [esi]).judgement, eax
+            mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_MISS
         .ENDIF
     .ENDIF
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   record->judgeTime = judgeTime;
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov eax, @judgeTime
-    mov esi, @record
-    mov (LevelNoteRecord PTR [esi]).judgeTime, eax 
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   ++globalLevelRecord.tapJudgesCount[record->judgement];
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @record
-    mov ecx, (LevelNoteRecord PTR [esi]).judgement
-    shl ecx, 2
+    mov eax, judgeTime
+    mov (LevelNoteRecord PTR [edi]).judgeTime, eax 
+    mov edx, (LevelNoteRecord PTR [edi]).judgement
+    shl edx, 2
     mov esi, offset globalLevelRecord.tapJudgesCount
-    add esi, ecx
+    add esi, edx
     inc dword PTR [esi]
     inc @curIndex
 
-    mov esi, @record
-    mov eax, (LevelNoteRecord PTR [esi]).judgement
+    mov eax, (LevelNoteRecord PTR [edi]).judgement
+    mov esi, @note
+    add esi, type LevelNote
+    add edi, type LevelNoteRecord
+    mov @note, esi
+    mov @record, edi
     cmp eax, NOTE_JUDGE_MISS
     je NoteTapJudgement_beginWhile
-    invoke timeGetTime
-    mov esi, @record
-    sub eax, globalLevelBeginTime
-    sub eax, (LevelNoteRecord PTR [esi]).judgeTime
-    invoke AudioPlay, tapSoundDeviceID, eax
 NoteTapJudgement_endWhile:
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   globalLevelRecord.currentIndices[index] = curIndex
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    invoke timeGetTime
+    sub eax, globalLevelBeginTime
+    sub eax, judgeTime
+    invoke AudioPlay, tapSoundDeviceID, eax
+
     mov esi, offset globalLevelRecord.currentIndices
     mov ecx, index
     shl ecx, 2
@@ -244,11 +210,19 @@ NoteTapJudgement endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; NoteCatchJudgement
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-NoteCatchJudgement  proc uses esi ecx, index, currentTime
+NoteCatchJudgement  proc uses ecx edx esi edi, index, currentTime
+    local @pressTime: dword
     local @noteCount: dword
     local @curIndex: dword
     local @note: ptr LevelNote
     local @record: ptr LevelNoteRecord
+
+    mov esi, offset globalKeyPressTime
+    mov ecx, index
+    shl ecx, 2
+    add esi, ecx
+    mov eax, [esi]
+    mov @pressTime, eax
 
     mov esi, globalPCurLevel
     add esi, type Level
@@ -267,11 +241,6 @@ NoteCatchJudgement  proc uses esi ecx, index, currentTime
     mov eax, [esi]
     mov @curIndex, eax
 
-NoteCatchJudgement_beginWhile:
-    mov eax, @noteCount
-    cmp eax, @curIndex
-    jna NoteCatchJudgement_endWhile
-
     ; (globalPCurLevel)->notes[index][curIndex]
     mov eax, GAME_KEY_COUNT
     sub eax, index
@@ -285,60 +254,58 @@ NoteCatchJudgement_beginWhile:
     sub esi, eax
     mov @note, esi
     ; LevelNoteRecord *record = &globalLevelRecord.records[index][curIndex]
-    mov esi, offset globalLevelRecord
-    add esi, type LevelRecord
-    sub esi, eax
-    mov @record, esi
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;  (note->type == NOTE_TAP)
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @note
-    mov eax, (LevelNote PTR  [esi]).NoteType
-    mov esi, NOTE_TAP
-    cmp eax, esi
-    je  NoteCatchJudgement_endWhile
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;   currentTime + NOTE_JUDGE_PERFECT_LIMIT - note->time < 0 => break
-;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    mov esi, @note
-    mov eax, (LevelNote PTR [esi]).Time
-    mov esi, currentTime
-    add esi, NOTE_JUDGE_PERFECT_LIMIT
-    sub esi, eax
-    cmp esi, 80000000h
-    jge  NoteCatchJudgement_endWhile
+    mov edi, offset globalLevelRecord
+    add edi, type LevelRecord
+    sub edi, eax
+    mov @record, edi
 
-    mov esi, @note
+NoteCatchJudgement_beginWhile:
+    mov eax, @noteCount
+    cmp eax, @curIndex
+    jna NoteCatchJudgement_endWhile
+
+    ; (note->type == NOTE_TAP) => break
+    mov eax, (LevelNote PTR  [esi]).NoteType
+    mov edx, NOTE_TAP
+    cmp eax, edx
+    je  NoteCatchJudgement_endWhile
+    ; currentTime + NOTE_JUDGE_PERFECT_LIMIT - note->time < 0 => break
+    mov eax, (LevelNote PTR [esi]).Time
+    mov edx, currentTime
+    add edx, NOTE_JUDGE_PERFECT_LIMIT
+    sub edx, eax
+    shl edx, 1
+    jc  NoteCatchJudgement_endWhile
+
     mov eax, (LevelNote PTR [esi]).Time
     add eax, NOTE_JUDGE_PERFECT_LIMIT
-    mov esi, offset globalKeyPressTime
-    mov ecx, index
-    shl ecx, 2
-    add esi, ecx
-    sub eax, [esi]
+    sub eax, @pressTime
     ; note->time + NOTE_JUDGE_PERFECT_LIMIT - globalKeyPressTime[index] >= 0
     .if eax < 80000000h
-        mov esi, @note
         mov eax, (LevelNote PTR [esi]).Time
-        mov esi, @record
-        mov (LevelNoteRecord PTR [esi]).judgeTime, eax
-        mov (LevelNoteRecord PTR [esi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
+        mov (LevelNoteRecord PTR [edi]).judgeTime, eax
+        mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
         mov esi, offset globalLevelRecord.catchJudgeCount
         inc dword ptr [esi]
         invoke timeGetTime
-        mov esi, @record
+        mov edi, @record
         sub eax, globalLevelBeginTime
-        sub eax, (LevelNoteRecord PTR [esi]).judgeTime
+        sub eax, (LevelNoteRecord PTR [edi]).judgeTime
         invoke AudioPlay, tapSoundDeviceID, eax
     .else
         mov eax, currentTime
-        mov esi, @record
-        mov (LevelNoteRecord PTR [esi]).judgeTime, eax
-        mov (LevelNoteRecord PTR [esi]).judgement, NOTE_JUDGE_MISS
+        mov (LevelNoteRecord PTR [edi]).judgeTime, eax
+        mov (LevelNoteRecord PTR [edi]).judgement, NOTE_JUDGE_MISS
         mov esi, offset globalLevelRecord.catchJudgeCount
         inc dword ptr [esi + 4]
     .endif
     inc @curIndex
+    mov esi, @note
+    add esi, type LevelNote
+    mov @note, esi
+    mov edi, @record
+    add edi, type LevelNoteRecord
+    mov @record, edi
     jmp NoteCatchJudgement_beginWhile
 NoteCatchJudgement_endWhile:
     mov esi, offset globalLevelRecord.currentIndices
@@ -483,120 +450,124 @@ GameLevelReset_L1:
 GameLevelReset endp
 
 GameUpdate proc uses edx esi
+    local @currentTime: dword
+    invoke timeGetTime
+    sub eax, globalLevelBeginTime
+    mov @currentTime, eax
     .if globalCurrentPage == PLAY_PAGE
         .if globalLevelState == GAME_LEVEL_RESET
-            invoke timeGetTime
-            sub eax, globalLevelResetTime
-            .if eax >= GAME_LEVEL_WAIT_TIME
-                invoke AudioPlay, globalCurLevelMusicID, 0
+            .if eax < 80000000h
+                invoke AudioPlay, globalCurLevelMusicID, eax
                 mov globalLevelState, GAME_LEVEL_PLAYING
             .endif
         .elseif globalLevelState == GAME_LEVEL_PLAYING
-            invoke timeGetTime
-            sub eax, globalLevelBeginTime
             mov esi, globalPCurLevel
             mov edx, (Level ptr [esi]).totalTime
             .if eax >= edx
                 mov globalCurrentPage, RESULT_PAGE
+                ret
             .endif
         .endif
-        invoke GameUpdateJudgements
+        mov ecx, GAME_KEY_COUNT
+GameUpdate_L1:
+        mov edx, GAME_KEY_COUNT
+        sub edx, ecx
+        push ecx
+        invoke GameUpdateJudgements, edx, @currentTime
+        pop ecx
+        loop GameUpdate_L1
 	.endif
 	ret
 GameUpdate endp
 
-GameUpdateJudgements proc uses ecx edx esi
-    local @currentTime: dword
-    local @keyi: dword
-    local @pRecords: ptr LevelNoteRecord
-    local @pCurrentID: ptr dword
+GameUpdateJudgements proc uses ecx edx esi edi, keyi: dword, currentTime: dword
+    local @pressTime
+    local @noteCount: ptr dword
+    local @currentID: ptr dword
     local @pTheRecord: ptr LevelNoteRecord
-    local @pNotes: ptr LevelNote
-    local @pNoteCount: ptr dword
     local @pTheNote: ptr LevelNote
-    local @i: dword
-    invoke timeGetTime
-    sub eax, globalLevelBeginTime
-    mov @currentTime, eax
-    mov @keyi, 0
-    mov esi, offset globalLevelRecord
-    mov @pCurrentID, esi
-    add esi, type LevelRecord
-    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNoteRecord
-    mov @pRecords, esi
+
+    mov esi, offset globalKeyPressTime
+    mov eax, keyi
+    shl eax, 2
+    add esi, eax
+    mov eax, [esi]
+    mov @pressTime, eax
+
     mov esi, globalPCurLevel
     add esi, type Level
-    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNote
-    mov @pNotes, esi
-    sub esi, GAME_KEY_COUNT * type dword
-    mov @pNoteCount, esi
-GameUpdateJudgements_L1:
-    mov esi, @pCurrentID
+    ; globalPCurLevel->noteCounts
+    sub esi, GAME_KEY_COUNT * type dword + GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNote
+    mov ecx, keyi
+    shl ecx, 2
+    add esi, ecx
     mov eax, [esi]
-    mov @i, eax
-    mov edx, 8; type LevelNote, type LevelNoteRecord
-    mul edx
-    mov edx, @pRecords
-    add edx, eax
-    mov @pTheRecord, edx 
-    mov edx, @pNotes
-    add edx, eax
-    mov @pTheNote, edx
-    mov eax, @i
-    mov esi, @pNoteCount
-    mov edx, @pTheNote
-GameUpdateJudgements_L2:
-    cmp eax, [esi]
-    jge GameUpdateJudgements_L2_Exit
-    mov eax, (LevelNote ptr [edx]).NoteType
+    mov @noteCount, eax
+
+    mov esi, offset globalLevelRecord
+    mov ecx, keyi
+    shl ecx, 2
+    add esi, ecx
+    mov edx, [esi]
+    mov @currentID, edx
+
+    mov eax, GAME_KEY_COUNT
+    sub eax, keyi
+    mov ecx, MAX_NOTE_LENGTH
+    mul ecx
+    sub eax, @currentID
+    mov ecx, 8
+    mul ecx
+    mov esi, globalPCurLevel
+    add esi, type Level
+    sub esi, eax
+    mov @pTheNote, esi
+    mov edi, offset globalLevelRecord
+    add edi, type LevelRecord
+    sub edi, eax
+    mov @pTheRecord, edi
+
+GameUpdateJudgements_L1:
+    mov eax, @currentID
+    cmp eax, @noteCount
+    jge GameUpdateJudgements_L1_Exit
+
+    mov eax, (LevelNote ptr [esi]).NoteType
     .if eax == NOTE_TAP
-        mov eax, @currentTime
+        mov eax, currentTime
         sub eax, NOTE_JUDGE_GREAT_LIMIT
-        sub eax, (LevelNote ptr [edx]).Time
+        sub eax, (LevelNote ptr [esi]).Time
         shl eax, 1
-        jc GameUpdateJudgements_L2_Exit
-        mov esi, @pTheRecord
-        mov eax, @currentTime
-        mov (LevelNoteRecord ptr [esi]).judgeTime, eax
-        mov (LevelNoteRecord ptr [esi]).judgement, NOTE_JUDGE_MISS
-        mov esi, @pCurrentID
-        inc dword ptr [esi]
-        mov esi, offset globalLevelRecord.tapJudgesCount
-        inc dword ptr [esi + NOTE_JUDGE_MISS * type dword]
+        jc GameUpdateJudgements_L1_Exit
+        mov eax, currentTime
+        mov (LevelNoteRecord ptr [edi]).judgeTime, eax
+        mov (LevelNoteRecord ptr [edi]).judgement, NOTE_JUDGE_MISS
+        mov edi, offset globalLevelRecord.tapJudgesCount
+        inc dword ptr [edi + NOTE_JUDGE_MISS * type dword]
     .elseif eax == NOTE_CATCH
-        mov esi, offset globalKeyPressing
-        add esi, @keyi
-        mov cl, [esi]
+        mov ebx, offset globalKeyPressing
+        add ebx, keyi
+        mov cl, [ebx]
         .if cl > 0
-            mov esi, offset globalKeyPressTime
-            mov eax, @keyi
-            shl eax, 2
-            add esi, eax
-            mov eax, [esi]
-            sub eax, (LevelNote ptr [edx]).Time
+            mov eax, @pressTime
+            sub eax, (LevelNote ptr [esi]).Time
             sub eax, NOTE_JUDGE_PERFECT_LIMIT
             .if eax < 80000000h
-                mov esi, @pTheRecord
-                mov eax, (LevelNote ptr [edx]).Time
-                mov (LevelNoteRecord ptr [esi]).judgeTime, eax
-                mov (LevelNoteRecord ptr [esi]).judgement, NOTE_JUDGE_MISS
-                mov esi, @pCurrentID
-                inc dword ptr [esi]
-                mov esi, offset globalLevelRecord.catchJudgeCount
-                inc dword ptr [esi + 4]
+                mov eax, (LevelNote ptr [esi]).Time
+                mov (LevelNoteRecord ptr [edi]).judgeTime, eax
+                mov (LevelNoteRecord ptr [edi]).judgement, NOTE_JUDGE_MISS
+                mov edi, offset globalLevelRecord.catchJudgeCount
+                inc dword ptr [edi + 4]
             .else
-                mov eax, (LevelNote ptr [edx]).Time
-                sub eax, @currentTime
+                mov eax, (LevelNote ptr [esi]).Time
+                sub eax, currentTime
                 shl eax, 1
-                jnc GameUpdateJudgements_L2_Exit
-                mov esi, @pTheRecord
-                mov eax, (LevelNote ptr [edx]).Time
-                mov (LevelNoteRecord ptr [esi]).judgeTime, eax
-                mov (LevelNoteRecord ptr [esi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
-                mov esi, @pCurrentID
-                inc dword ptr [esi]
-                mov esi, offset globalLevelRecord.catchJudgeCount
-                inc dword ptr [esi]
+                jnc GameUpdateJudgements_L1_Exit
+                mov eax, (LevelNote ptr [esi]).Time
+                mov (LevelNoteRecord ptr [edi]).judgeTime, eax
+                mov (LevelNoteRecord ptr [edi]).judgement, NOTE_JUDGE_CRITICAL_PERFECT
+                mov edi, offset globalLevelRecord.catchJudgeCount
+                inc dword ptr [edi]
                 invoke timeGetTime
                 mov esi, @pTheRecord
                 sub eax, globalLevelBeginTime
@@ -604,50 +575,34 @@ GameUpdateJudgements_L2:
                 invoke AudioPlay, tapSoundDeviceID, eax
             .endif
         .else
-            mov eax, @currentTime
+            mov eax, currentTime
             sub eax, NOTE_JUDGE_PERFECT_LIMIT
-            sub eax, (LevelNote ptr [edx]).Time
+            sub eax, (LevelNote ptr [esi]).Time
             shl eax, 1
-            jc GameUpdateJudgements_L2_Exit
-            mov esi, @pTheRecord
-            mov eax, (LevelNote ptr [edx]).Time
-            mov (LevelNoteRecord ptr [esi]).judgeTime, eax
-            mov (LevelNoteRecord ptr [esi]).judgement, NOTE_JUDGE_MISS
-            mov esi, @pCurrentID
-            inc dword ptr [esi]
-            mov esi, offset globalLevelRecord.catchJudgeCount
-            inc dword ptr [esi + 4]
+            jc GameUpdateJudgements_L1_Exit
+            mov eax, (LevelNote ptr [esi]).Time
+            mov (LevelNoteRecord ptr [edi]).judgeTime, eax
+            mov (LevelNoteRecord ptr [edi]).judgement, NOTE_JUDGE_MISS
+            mov edi, offset globalLevelRecord.catchJudgeCount
+            inc dword ptr [edi + 4]
         .endif
     .endif
 
-    mov eax, @i
-    inc eax
-    mov @i, eax
-    mov esi, @pNoteCount
-    add esi, type dword
-    mov @pNoteCount, esi
-    mov edx, @pTheRecord
-    add edx, type LevelNoteRecord
-    mov @pTheRecord, edx
-    mov edx, @pTheNote
-    add edx, type LevelNote
-    mov @pTheNote, edx
-    jmp GameUpdateJudgements_L2
-GameUpdateJudgements_L2_Exit:
-    mov esi, @pCurrentID
-    add esi, type dword
-    mov @pCurrentID, esi
-    mov esi, @pRecords
-    add esi, MAX_NOTE_LENGTH * type LevelNoteRecord
-    mov @pRecords, esi
-    mov esi, @pNotes
-    add esi, MAX_NOTE_LENGTH * type LevelNote
-    mov @pNotes, esi
-    mov eax, @keyi
-    inc eax
-    mov @keyi, eax
-    cmp eax, GAME_KEY_COUNT
-    jl GameUpdateJudgements_L1
+    inc @currentID
+    mov esi, @pTheNote
+    add esi, type LevelNote
+    mov @pTheNote, esi
+    mov edi, @pTheRecord
+    add edi, type LevelNoteRecord
+    mov @pTheRecord, edi
+    jmp GameUpdateJudgements_L1
+GameUpdateJudgements_L1_Exit:
+    mov edi, offset globalLevelRecord
+    mov ecx, keyi
+    shl ecx, 2
+    add edi, ecx
+    mov eax, @currentID
+    mov [edi], eax
     ret
 GameUpdateJudgements endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -692,6 +647,7 @@ GameDraw	proc uses esi ebx, _hDC
         local @R_
         local @G_
         local @B_
+        local @currentTime
 		; DC for background 
 		invoke	CreateCompatibleDC, _hDC; 
 		mov		@hDcBack, eax
@@ -805,7 +761,17 @@ GameDraw	proc uses esi ebx, _hDC
             invoke SelectObject, @hDcBack, @hOldObject
 		    invoke DeleteDC, @hDcBack
 
-            invoke GameDrawNotes, _hDC
+            invoke timeGetTime
+            sub eax, globalLevelBeginTime
+            mov @currentTime, eax
+            mov ecx, GAME_KEY_COUNT
+GameDraw_L1:
+            mov edx, GAME_KEY_COUNT
+            sub edx, ecx
+            push ecx
+            invoke GameDrawNotes, _hDC, edx, @currentTime
+            pop ecx
+            loop GameDraw_L1
         .elseif globalCurrentPage == RESULT_PAGE
             invoke	CreateCompatibleDC, _hDC; 创建与_hDC兼容的另一个DC(设备上下文)，以备后续操作
 		    mov		@hDcBack, eax
@@ -895,113 +861,106 @@ GameDraw	endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; GameDrawNotes
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-GameDrawNotes proc hDC: dword
-    local @currentTime: dword
-    local @keyi: dword
-    local @pRecords: ptr LevelNoteRecord
-    local @pCurrentID: ptr dword
-    local @pTheRecord: ptr LevelNoteRecord
-    local @pNotes: ptr LevelNote
-    local @pNoteCount: ptr dword
-    local @pTheNote: ptr LevelNote
+GameDrawNotes proc uses ecx edx esi edi, hDC: dword, keyi: dword, currentTime: dword
+    local @noteCount: dword
     local @i: dword
-    invoke timeGetTime
-    sub eax, globalLevelBeginTime
-    mov @currentTime, eax
-    mov @keyi, 0
-    mov esi, offset globalLevelRecord
-    mov @pCurrentID, esi
-    add esi, type LevelRecord
-    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNoteRecord
-    mov @pRecords, esi
+    local @pTheNote: ptr LevelNote
+    local @pTheRecord: ptr LevelNoteRecord
+
     mov esi, globalPCurLevel
     add esi, type Level
-    sub esi, GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNote
-    mov @pNotes, esi
-    sub esi, GAME_KEY_COUNT * type dword
-    mov @pNoteCount, esi
-GameDrawNotes_L1:
-    mov esi, @pCurrentID
+    ; globalPCurLevel->noteCounts
+    sub esi, GAME_KEY_COUNT * type dword + GAME_KEY_COUNT * MAX_NOTE_LENGTH * type LevelNote
+    mov ecx, keyi
+    shl ecx, 2
+    add esi, ecx
     mov eax, [esi]
-    mov @i, eax
-    mov edx, 8; type LevelNote, type LevelNoteRecord
-    mul edx
-    mov edx, @pRecords
-    add edx, eax
-    mov @pTheRecord, edx 
-    mov edx, @pNotes
-    add edx, eax
-    mov @pTheNote, edx
-GameDrawNotes_L2:
+    mov @noteCount, eax
+
+    mov esi, offset globalLevelRecord
+    mov ecx, keyi
+    shl ecx, 2
+    add esi, ecx
+    mov edx, [esi]
+    mov @i, edx
+
+    mov eax, GAME_KEY_COUNT
+    sub eax, keyi
+    mov ecx, MAX_NOTE_LENGTH
+    mul ecx
+    sub eax, @i
+    mov ecx, 8
+    mul ecx
+    mov esi, globalPCurLevel
+    add esi, type Level
+    sub esi, eax
+    mov @pTheNote, esi
+    mov edi, offset globalLevelRecord
+    add edi, type LevelRecord
+    sub edi, eax
+    mov @pTheRecord, edi
+
+GameDrawNotes_L1:
     mov eax, @i
     test eax, eax
-    jz GameDrawNotes_L2_Exit
+    jz GameDrawNotes_L1_Exit
     dec eax
     mov @i, eax
-    mov eax, @pTheRecord
-    sub eax, type LevelNoteRecord
-    mov @pTheRecord, eax
-    mov eax, @pTheNote
-    sub eax, type LevelNote
-    mov @pTheNote, eax
+    sub esi, type LevelNote
+    sub edi, type LevelNoteRecord
+    mov @pTheNote, esi
+    mov @pTheRecord, edi
 
-    mov esi, @pTheRecord
-    mov eax, (LevelNoteRecord ptr [esi]).judgement
+    mov eax, (LevelNoteRecord ptr [edi]).judgement
     .if eax == NOTE_JUDGE_MISS
-        invoke GameDrawOneNote, hDC, @keyi, @pTheNote, @currentTime
-        jmp GameDrawNotes_L2
+        invoke GameDrawOneNote, hDC, keyi, @pTheNote, currentTime
+        jmp GameDrawNotes_L1
     .else
-        mov edx, @currentTime
-        sub edx, (LevelNoteRecord ptr [esi]).judgeTime
-        mov esi, @pTheNote
-        invoke GameDrawEffect, hDC, @keyi, (LevelNote ptr [esi]).NoteType, edx
+        mov edx, currentTime
+        sub edx, (LevelNoteRecord ptr [edi]).judgeTime
+        invoke GameDrawEffect, hDC, keyi, (LevelNote ptr [esi]).NoteType, edx
         test eax, eax
-        jnz GameDrawNotes_L2
+        jnz GameDrawNotes_L1
     .endif
-GameDrawNotes_L2_Exit:
-    mov esi, @pCurrentID
-    mov eax, [esi]
-    mov @i, eax
-    mov edx, 8; type LevelNote, type LevelNoteRecord
-    mul edx
-    mov edx, @pNotes
-    add edx, eax
-    mov @pTheNote, edx
+    mov esi, @pTheNote
+    mov edi, @pTheRecord
+GameDrawNotes_L1_Exit:
+
+    mov esi, offset globalLevelRecord
+    mov ecx, keyi
+    shl ecx, 2
+    add esi, ecx
+    mov edx, [esi]
+    mov @i, edx
+
+    mov eax, GAME_KEY_COUNT
+    sub eax, keyi
+    mov ecx, MAX_NOTE_LENGTH
+    mul ecx
+    sub eax, @i
+    mov ecx, type LevelNote
+    mul ecx
+    mov esi, globalPCurLevel
+    add esi, type Level
+    sub esi, eax
+    mov @pTheNote, esi
+
     mov eax, @i
-    mov esi, @pNoteCount
-    mov edx, @pTheNote
-GameDrawNotes_L3:
-    cmp eax, [esi]
-    jge GameDrawNotes_L3_Exit
-    invoke GameDrawOneNote, hDC, @keyi, @pTheNote, @currentTime
+GameDrawNotes_L2:
+    cmp eax, @noteCount
+    jge GameDrawNotes_L2_Exit
+    invoke GameDrawOneNote, hDC, keyi, esi, currentTime
     test eax, eax
-    jz GameDrawNotes_L3_Exit
+    jz GameDrawNotes_L2_Exit
 
     mov eax, @i
     inc eax
     mov @i, eax
-    mov esi, @pNoteCount
-    add esi, type dword
-    mov @pNoteCount, esi
-    mov edx, @pTheRecord
-    add edx, type LevelNoteRecord
-    mov @pTheRecord, edx
-    mov edx, @pTheNote
-    add edx, type LevelNote
-    mov @pTheNote, edx
-    jmp GameDrawNotes_L3
-GameDrawNotes_L3_Exit:
-    mov esi, @pCurrentID
-    add esi, type dword
-    mov @pCurrentID, esi
-    mov esi, @pNotes
-    add esi, MAX_NOTE_LENGTH * type LevelNote
-    mov @pNotes, esi
-    mov eax, @keyi
-    inc eax
-    mov @keyi, eax
-    cmp eax, GAME_KEY_COUNT
-    jl GameDrawNotes_L1
+    mov esi, @pTheNote
+    add esi, type LevelNote
+    mov @pTheNote, esi
+    jmp GameDrawNotes_L2
+GameDrawNotes_L2_Exit:
     ret
 GameDrawNotes endp
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1011,27 +970,26 @@ GameKeyCallback     proc       uses eax ecx esi,        keyCode:byte, down:byte,
     local @index
     ;@@@@@@@@@@@@@@@@@@@@@ 主页 @@@@@@@@@@@@@@@@@@@@@
     .if globalCurrentPage == INIT_PAGE
-        .if keyCode == 'H'
+        .if (keyCode == 'H') && down
             mov eax, settings
             .if eax == 0
                 mov settings, 1
                 invoke  GetModuleHandle, NULL
                 invoke	DialogBoxParam, eax, DLG_MAIN, NULL, offset _ProcDlgMain,NULL
             .endif
-        .elseif keyCode == 'J'
+        .elseif (keyCode == 'J') && down
             mov globalCurrentPage, SELECT_PAGE
             invoke AudioPlay, globalSelectDeviceID, 0
-        ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
-        .elseif keyCode == 'F'
-            mov globalCurrentPage, RESULT_PAGE
-        ;;;;;;;;;;;;;DEBUG;;;;;;;;;;;;;;;
         .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 选歌 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == SELECT_PAGE
-        .if keyCode == 'H'
+        .if (keyCode == VK_RETURN) && down
             mov globalCurrentPage, PLAY_PAGE
             invoke AudioStop, globalSelectDeviceID
             invoke GameLevelReset
+        .elseif (keyCode == VK_ESCAPE) && down
+            mov globalCurrentPage, INIT_PAGE
+            invoke AudioStop, globalSelectDeviceID
         .endif 
     ;@@@@@@@@@@@@@@@@@@@@@ Play @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == PLAY_PAGE
@@ -1060,7 +1018,7 @@ GameKeyCallback_L2:
                     sub eax, globalLevelBeginTime
                     pop esi
                     mov [esi], eax
-                    invoke NoteTapJudgement, @index
+                    invoke NoteTapJudgement, @index, eax
                 .endif
             .else
                 mov esi, offset globalKeyPressing
@@ -1079,9 +1037,18 @@ GameKeyCallback_L2:
         inc eax
         jmp GameKeyCallback_L2
 GameKeyCallback_L2_Exit:
+        mov al, VK_ESCAPE
+        .if (al == keyCode) && down
+            mov globalCurrentPage, RESULT_PAGE
+            invoke AudioStop, globalCurLevelMusicID
+        .endif
     ;@@@@@@@@@@@@@@@@@@@@@ 结算 @@@@@@@@@@@@@@@@@@@@@
     .elseif globalCurrentPage == RESULT_PAGE
-
+        mov al, VK_ESCAPE
+        .if (al == keyCode) && down
+            mov globalCurrentPage, SELECT_PAGE
+            invoke AudioPlay, globalSelectDeviceID, 0
+        .endif
     .endif
     ret
 GameKeyCallback     endp

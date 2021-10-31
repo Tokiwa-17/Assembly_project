@@ -4,7 +4,7 @@ __config_inc_ equ <1>
 ; EQU 等值段
 WINDOW_HEIGHT 			equ 	960
 WINDOW_WIDTH  			equ		1280
-TIMER_MAIN_INTERVAL		equ		16
+TIMER_MAIN_INTERVAL		equ		11
 GAME_LEVEL_WAIT_TIME     equ     1500
 
 TAP_NOTE_HEIGHT   equ 50
