@@ -32,6 +32,7 @@ LevelLoad proc opernNamePtr: ptr sbyte, opernInstancePtr: ptr Level
     .endif
     mov @hFile, eax
     invoke ReadFile, @hFile, opernInstancePtr, type Level, NULL, NULL
+    invoke CloseHandle, @hFile
     ret
 LevelLoad endp
 

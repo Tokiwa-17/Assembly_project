@@ -62,7 +62,7 @@ GameLoadNoteAssets proc
 GameLoadNoteAssets endp
 
 GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, animTime: dword
-    local @anim
+    local @anim: ptr AnimationClip
     local @dstX: dword
     local @dstY: dword
     local @dstW: dword
@@ -83,7 +83,7 @@ GameDrawEffect proc uses edx esi, hDC: dword, keyIndex: dword, noteType: dword, 
     mov eax, (AnimationClip ptr [esi]).interval
     mul (AnimationClip ptr [esi]).rows
     mul (AnimationClip ptr [esi]).columns
-    .if eax >= animTime
+    .if animTime >= eax
         mov eax, 0
         ret
     .endif
@@ -148,7 +148,7 @@ GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr Le
     sub eax, (LevelNote ptr [esi]).Time
     imul globalSpeedLevel
     cdq
-    mov ebx, 9
+    mov ebx, 8
     idiv ebx
     add eax, JUDGELINE_Y
     mov edx, eax
@@ -186,8 +186,7 @@ GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr Le
     .endif
     push eax
     invoke FillRect, hDC, addr @rect, eax
-    pop eax
-    invoke DeleteObject, eax
+    call DeleteObject
     mov eax, 1
 GameDrawOneNote_Exit:
     ret
