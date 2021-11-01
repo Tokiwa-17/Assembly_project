@@ -18,10 +18,7 @@
   {
       "cmake.configureArgs": ["-DMASM_HOME=C:/masm32"],
       "C_Cpp.default.configurationProvider": "ms-vscode.cmake.tools",
-      "files.associations": {
-          "charconv": "cpp"
-      },
-      "debug.allowBreakpointsEverywhere": true
+      "debug.allowBreakpointsEverywhere": true // for debug
   }
   ```
 

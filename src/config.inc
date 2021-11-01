@@ -23,10 +23,6 @@ TAP_EFFECT      equ     200
 CATCH_EFFECT    equ     201
 TAP_SOUND_EFFECT equ    202
 
-MUSIC_SELECT_0  equ    105
-MUSIC_SELECT_1  equ    106
-PLAY_COVER_0    equ    107
-PLAY_COVER_1    equ    108
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; settings.rc
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

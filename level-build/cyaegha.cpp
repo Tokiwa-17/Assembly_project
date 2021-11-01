@@ -21,9 +21,9 @@ int main()
     LevelBuilderInfo info;
     info.name = "Cyaegha";
     info.author = "USAO";
-    info.musicPath = "levels/Cyaegha.wav";
-    info.imagePath = "../../src/Cyaegha_play.bmp";
-    info.musicSelectPath = "levels/Cyaegha_30s.wav";
+    info.musicPath = "Cyaegha.wav";
+    info.imagePath = "Cyaegha.bmp";
+    info.playImagePath = "Cyaegha_play.bmp";
     info.difficulty = DIFFICULTY_NORMAL;
     info.offset = 0; // TODO
 
