@@ -76,6 +76,11 @@ AudioStop proc wDeviceID: dword
     ret
 AudioStop endp
 
+AudioClose proc wDeviceID: dword
+    invoke mciSendCommand, wDeviceID, MCI_CLOSE, 0, 0
+    ret
+AudioClose endp
+
 AudioOpenResource proc uses esi, resID :dword
     local @hResSrc: HRSRC
     local @hRes: HGLOBAL

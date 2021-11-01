@@ -32,7 +32,7 @@ animCatchEffect AnimationClip <>
 
 .const
 tractXarr dword TRACT0_X, TRACT1_X, TRACT2_X, TRACT3_X, TRACT4_X
-alphaBlendErrorFmt db "AlphaBlend error code is %lu", 0ah, 0dh, 0
+loadBitmapErrorFmt db "Failed to load effect bitmap; error code is %lu", 0ah, 0dh, 0
 
 .code
 AnimationInit proc uses edx edi, image: dword, rows: dword, columns: dword, pClip: ptr AnimationClip
@@ -76,7 +76,6 @@ GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dwo
     local @srcX: dword
     local @srcY: dword
     local @hBmpDC: dword
-    local @hTrBmpDC: dword
     local @hOldObject: dword
 
     mov eax, noteType
@@ -122,7 +121,6 @@ GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dwo
     mov eax, (AnimationClip ptr [esi]).frameHeight
     mul edx
     mov ebx, (AnimationClip ptr [esi]).frameWidth
-    mov edx, 0
     div ebx
     mov @dstH, eax
     mov edx, JUDGELINE_Y
@@ -137,7 +135,7 @@ GameDrawEffect proc uses ebx edx esi, hDC: dword, keyIndex: dword, noteType: dwo
     mov @hOldObject, eax
     mov esi, @anim
     invoke TransparentBlt, hDC, @dstX, @dstY, @dstW, @dstH, @hBmpDC, @srcX, @srcY, \
-        (AnimationClip ptr [esi]).frameWidth, (AnimationClip ptr [esi]).frameHeight, 00000000h
+        (AnimationClip ptr [esi]).frameWidth, (AnimationClip ptr [esi]).frameHeight, (AnimationClip ptr [esi]).alphaMask
     invoke SelectObject, @hBmpDC, @hOldObject
     invoke DeleteDC, @hBmpDC
     mov eax, 1
@@ -147,7 +145,6 @@ GameDrawEffect endp
 GameDrawOneNote proc uses ebx edx esi, hDC: dword, keyIndex: dword, note: ptr LevelNote, currentTime: dword
     local @noteCY: dword
     local @rect: RECT
-    local @brush: HBRUSH
 
     mov esi, note
     mov eax, currentTime

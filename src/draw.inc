@@ -12,6 +12,7 @@ AnimationClip struct
     frameWidth  dword ?
     frameHeight dword ?
     interval    dword 16
+    alphaMask   dword 00685b35h
 AnimationClip ends
 
 AnimationInit proto, image: dword, rows: dword, columns: dword, pClip: ptr AnimationClip

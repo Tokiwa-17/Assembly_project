@@ -101,7 +101,7 @@ PreviousDownFlag:
 			add esi, 2
 			mov ax,  word ptr [esi]
 			mov rotateDistance, ax
-			invoke changeQueue, rotateDistance  
+			invoke GameMouseWheelCallback, rotateDistance  
 ;********************************************************************
 		.elseif	eax ==	WM_CLOSE
 			invoke	timeKillEvent, mainTimerID

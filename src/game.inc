@@ -37,6 +37,7 @@ GameInit						PROTO
 GameShutdown                    PROTO
 GameDraw                        PROTO,      hDC:dword
 GameUpdate                      PROTO
+GameUpdateSelect                PROTO
 GameKeyCallback                 PROTO       keyCode:byte, down:byte, previousDown:byte
 GameLevelCalcScore              PROTO
 NoteCatchJudgement              PROTO,      index:dword, currentTime:dword
@@ -45,5 +46,5 @@ GameLevelReset                  PROTO
 GameUpdateJudgements            PROTO,      keyi: dword, currentTime: dword
 GameDrawNotes                   PROTO,      hDC:dword, keyi: dword, currentTime: dword
 _ProcDlgMain	                PROTO	    hWnd:dword, wMsg:dword, wParam:dword, lParam:dword
-changeQueue                     PROTO,      degree:sword
+GameMouseWheelCallback          PROTO,      degree:sword
 endif

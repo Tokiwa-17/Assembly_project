@@ -15,10 +15,12 @@ struct LevelBuilderInfo
     std::string_view author;
     std::string_view musicPath;
     std::string_view imagePath;
-    std::string_view musicSelectPath;
+    std::string_view playImagePath;
     LevelDifficulty difficulty;
     Time offset;
 };
+
+constexpr std::string_view LEVEL_FOLDER = "./levels/";
 
 class LevelBuilder
 {
@@ -26,16 +28,23 @@ public:
     LevelBuilder(const LevelBuilderInfo &info, float initBPM)
     {
         memset(&level, 0, sizeof(Level));
+        auto folder = std::string(LEVEL_FOLDER);
+        if (!std::filesystem::exists(folder))
+            std::filesystem::create_directory(folder);
         memcpy_s(level.musicName, MAX_NAME_LENGTH - 1, info.name.data(), info.name.size());
         level.musicName[info.name.size()] = '\0';
         memcpy_s(level.author, MAX_NAME_LENGTH - 1, info.author.data(), info.author.size());
         level.author[info.author.size()] = '\0';
-        memcpy_s(level.musicPath, MAX_NAME_LENGTH - 1, info.musicPath.data(), info.musicPath.size());
-        level.musicPath[info.musicPath.size()] = '\0';
-        memcpy_s(level.imagePath, MAX_NAME_LENGTH - 1, info.imagePath.data(), info.imagePath.size());
-        level.imagePath[info.imagePath.size()] = '\0';
-        memcpy_s(level.musicSelectPath, MAX_NAME_LENGTH - 1, info.musicSelectPath.data(), info.musicSelectPath.size());
-        level.musicSelectPath[info.musicSelectPath.size()] = '\0';
+        auto musicPath = folder + std::string(info.musicPath);
+        memcpy_s(level.musicPath, MAX_NAME_LENGTH - 1, musicPath.data(), musicPath.size());
+        level.musicPath[musicPath.size()] = '\0';
+        auto imagePath = folder + std::string(info.imagePath);
+        memcpy_s(level.imagePath, MAX_NAME_LENGTH - 1, imagePath.data(), imagePath.size());
+        level.imagePath[imagePath.size()] = '\0';
+        auto playImagePath = folder + std::string(info.playImagePath);
+        memcpy_s(level.playImagePath, MAX_NAME_LENGTH - 1, playImagePath.data(), playImagePath.size());
+        level.playImagePath[playImagePath.size()] = '\0';
+
         level.difficulty = info.difficulty;
 
         currentBPM = initBPM;
@@ -52,9 +61,7 @@ public:
             level.noteCounts[i] = uint32_t(notes[i].size());
             memcpy_s(level.notes[i], GAME_MAX_NOTES * sizeof(LevelNote), notes[i].data(), notes[i].size() * sizeof(LevelNote));
         }
-        std::string folder = "./levels/";
-        if (!std::filesystem::exists(folder))
-            std::filesystem::create_directory(folder);
+        auto folder = std::string(LEVEL_FOLDER);
         std::ofstream ofs(folder + level.musicName + ".level", std::ios::binary | std::ios::out);
         ofs.write(reinterpret_cast<char *>(&level), sizeof(Level));
     }

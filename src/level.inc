@@ -37,7 +37,7 @@ musicName       db      MAX_NAME_LENGTH     DUP(0)
 author          db      MAX_NAME_LENGTH     DUP(0)
 musicPath       db      MAX_NAME_LENGTH     DUP(0)
 imagePath       db      MAX_NAME_LENGTH     DUP(0)
-musicSelectPath db      MAX_NAME_LENGTH     DUP(0)
+playImagePath   db      MAX_NAME_LENGTH     DUP(0)
 LevelDifficulty dword   0
 totalTime       dword   0
 totalTapCount   dword   0
@@ -46,13 +46,17 @@ totalNoteCount  dword   0
 noteCounts      dword   GAME_KEY_COUNT      DUP(0)
 notes           LevelNote   GAME_KEY_COUNT * MAX_NOTE_LENGTH DUP(<>)
 Level       ends
+
+LevelResources struct
+    musicDeviceID dword ?
+    image dword ?
+    playImage dword ?
+LevelResources ends
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;函数声明
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-LevelLoad PROTO, opernNamePtr: ptr sbyte, opernInstancePtr: ptr Level
-;    int LevelLoad(const TCHAR *filePath, Level* pLevel); 
+LevelLoad proto, levelName: ptr sbyte, pLevel: ptr Level, pResources: ptr LevelResources
 
-LevelDestroy PROTO,      pLevel: ptr Level
-;    void LevelDestroy(Level *pLevel);
+LevelDestroy proto, pResources: ptr LevelResources
 
 endif
